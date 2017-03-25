@@ -5,8 +5,8 @@
  *      Author: christo
  */
 
-#ifndef CREMOTEBUTTON_H_
-#define CREMOTEBUTTON_H_
+#ifndef REMOTEBUTTON_H_
+#define REMOTEBUTTON_H_
 
 class cRemoteButton {
 	void (*buttonCallback)(void) = 0;
@@ -22,4 +22,4 @@ public:
 	~cRemoteButton();
 };
 
-#endif /* CREMOTEBUTTON_H_ */
+#endif /* REMOTEBUTTON_H_ */

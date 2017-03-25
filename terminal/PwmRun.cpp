@@ -5,11 +5,14 @@
  *      Author: christo
  */
 
-#include "cPwmRun.h"
+#include "PwmRun.h"
 
 cPwmRun::cPwmRun(cPWM * pwm)
 {
 	mPwm = pwm;
+	mNewDutyC = 0;
+	mDelay = 0;
+	mDelayCnt = 0;
 }
 
 void cPwmRun::setDuty(uint8_t delay, uint8_t newDuty)
@@ -41,7 +44,6 @@ void cPwmRun::run()
 		mPwm->incDutyC();
 	else
 		mPwm->decDutyC();
-
 }
 
 

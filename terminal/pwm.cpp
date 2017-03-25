@@ -8,44 +8,48 @@
 #include <terminal.h>
 #include "pwm.h"
 
-
-cPWM::cPWM(){}
+cPWM::cPWM()
+{
+    mOCRn = 0;
+}
 
 void cPWM::setOCRn(volatile uint16_t * ocr)
 {
-	mOCRn = ocr;
-	mEnabled = true;
+    mOCRn = ocr;
+    mEnabled = true;
 }
 
 uint8_t cPWM::setDutyC(uint8_t duty)
 {
-	if (!mEnabled)
-		return 0;
-	mDutyC = duty;
-	*mOCRn = mDutyC;
-	return 1;
+    if (!mEnabled)
+        return 0;
+    mDutyC = duty;
+    *mOCRn = mDutyC;
+    return 1;
 }
 
 void cPWM::incDutyC()
 {
-	if (mDutyC == 0xFF)
-		return;
+    if (mDutyC == 0xFF)
+        return;
 
-	setDutyC(++mDutyC);
+    setDutyC(++mDutyC);
 }
 
 void cPWM::decDutyC()
 {
-	if (mDutyC == 0x00)
-		return;
+    if (mDutyC == 0x00)
+        return;
 
-	setDutyC(--mDutyC);
+    setDutyC(--mDutyC);
 }
 
 uint8_t cPWM::getDutyC()
 {
-	return mDutyC;
+    return mDutyC;
 }
 
-cPWM::~cPWM() {}
+cPWM::~cPWM()
+{
+}
 

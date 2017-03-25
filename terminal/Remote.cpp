@@ -6,7 +6,8 @@
  */
 
 #include <terminal.h>
-#include "cRemote.h"
+
+#include "Remote.h"
 
 cRemote::cRemote() {}
 

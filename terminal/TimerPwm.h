@@ -1,5 +1,5 @@
-#ifndef CTIMERPWM_H_
-#define CTIMERPWM_H_
+#ifndef TIMERPWM_H_
+#define TIMERPWM_H_
 
 #include "pwm.h"
 
@@ -20,4 +20,4 @@ public:
 	virtual ~cTimerPwm();
 };
 
-#endif /* CTIMERPWM_H_ */
+#endif /* TIMERPWM_H_ */

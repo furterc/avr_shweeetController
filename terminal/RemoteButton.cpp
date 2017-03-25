@@ -5,7 +5,7 @@
  *      Author: christo
  */
 
-#include "cRemoteButton.h"
+#include "RemoteButton.h"
 
 cRemoteButton::cRemoteButton()
 {

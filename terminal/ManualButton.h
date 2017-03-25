@@ -5,8 +5,8 @@
  *      Author: christo
  */
 
-#ifndef CMANUALBUTTON_H_
-#define CMANUALBUTTON_H_
+#ifndef MANUALBUTTON_H_
+#define MANUALBUTTON_H_
 
 #include <terminal.h>
 
@@ -28,4 +28,4 @@ public:
 	virtual ~cManualButton();
 };
 
-#endif /* CMANUALBUTTON_H_ */
+#endif /* MANUALBUTTON_H_ */

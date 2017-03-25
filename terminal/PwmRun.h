@@ -5,8 +5,8 @@
  *      Author: christo
  */
 
-#ifndef CPWMRUN_H_
-#define CPWMRUN_H_
+#ifndef PWMRUN_H_
+#define PWMRUN_H_
 
 #include "pwm.h"
 #include "stdint.h"
@@ -26,4 +26,4 @@ public:
 	virtual ~cPwmRun();
 };
 
-#endif /* CPWMRUN_H_ */
+#endif /* PWMRUN_H_ */

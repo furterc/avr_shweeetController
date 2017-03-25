@@ -5,10 +5,11 @@
  *      Author: christo
  */
 
+#include "TimerPwm.h"
+
 #include <avr/io.h>
 #include <terminal.h>
 
-#include "cTimerPwm.h"
 
 
 cTimerPwm::cTimerPwm() {
@@ -105,8 +106,7 @@ void cTimerPwm::init()
 	}
 
 	mEnabled = true;
-	printp("PWM %d Initialized\n",mTimerNum);
-
+	printp("PWM%d init\n",mTimerNum);
 }
 
 

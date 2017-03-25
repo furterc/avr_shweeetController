@@ -5,7 +5,7 @@
  *      Author: christo
  */
 
-#include "cManualButton.h"
+#include "ManualButton.h"
 
 void (*callback)(void) = 0;
 

@@ -5,11 +5,12 @@
  *      Author: christo
  */
 
-#ifndef CREMOTE_H_
-#define CREMOTE_H_
+#ifndef REMOTE_H_
+#define REMOTE_H_
 
 #include <avr/io.h>
-#include "cRemoteButton.h"
+
+#include "RemoteButton.h"
 
 	/* Setup Button port */
 	#define BTN_DDR DDRL
@@ -30,4 +31,4 @@ public:
 
 
 
-#endif /* CREMOTE_H_ */
+#endif /* REMOTE_H_ */
