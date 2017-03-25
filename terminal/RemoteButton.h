@@ -1,10 +1,3 @@
-/*
- * cRemoteButton.h
- *
- *  Created on: 19 Feb 2017
- *      Author: christo
- */
-
 #ifndef REMOTEBUTTON_H_
 #define REMOTEBUTTON_H_
 
