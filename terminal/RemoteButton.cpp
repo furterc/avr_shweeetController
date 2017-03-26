@@ -1,45 +1,36 @@
-/*
- * cRemoteButton.cpp
- *
- *  Created on: 19 Feb 2017
- *      Author: christo
- */
-
 #include "RemoteButton.h"
 
 cRemoteButton::cRemoteButton()
 {
-
 }
 
 void cRemoteButton::setCB(void (*cb)(void))
 {
-	if (!cb)
-		return;
+    if (!cb)
+        return;
 
-	buttonCallback = cb;
-	mEnabled = true;
+    buttonCallback = cb;
+    mEnabled = true;
 }
 
 void cRemoteButton::runCB()
 {
-	if (mEnabled)
-		buttonCallback();
+    if (mEnabled)
+        buttonCallback();
 }
 
-void  cRemoteButton::setState(bool state)
+void cRemoteButton::setState(bool state)
 {
-	mBtnState = state;
+    mBtnState = state;
 }
 
-bool  cRemoteButton::getState()
+bool cRemoteButton::getState()
 {
-	return mBtnState;
+    return mBtnState;
 }
 
-
-
-cRemoteButton::~cRemoteButton() {
-	// TODO Auto-generated destructor stub
+cRemoteButton::~cRemoteButton()
+{
+    // TODO Auto-generated destructor stub
 }
 

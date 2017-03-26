@@ -7,12 +7,15 @@
 
 #include <terminal.h>
 #include <led.h>
+#include <port.h>
 #include <heartbeat.h>
 #include <analog_sampler.h>
 
-#include "mBtUart.h"
+//#include "mBtUart.h"
 #include "timer_two.h"
 #include "Packet.h"
+#include "Bluetooth.h"
+//#include "BT_Commands.h"
 
 #include "Lights.h"
 #include "ManualButton.h"
@@ -29,24 +32,47 @@ void watchdogReset()
     __asm__ __volatile__ ( "wdr\n" );
 }
 
-mBtUart mBt = mBtUart();
+//mBtUart mBt = mBtUart();
 //cBlueTerm mBtTerm = cBlueTerm(&mBt);
 cTime myTime = cTime();
 cLights mLights = cLights();
 
+
+cPacket mPacket;
+void hourEntry(cPacket packet)
+{
+    myTime.setHours(packet.getData());
+}
+extern const bt_dbg_entry btHourEntry =
+{ hourEntry,  mPacket.BT_HOURS };
+void minuteEntry(cPacket packet)
+{
+    myTime.setMinutes(packet.getData());
+}
+extern const bt_dbg_entry btMinuteEntry =
+{ minuteEntry,  mPacket.BT_MINUTES};
+
+void secondEntry(cPacket packet)
+{
+    myTime.setSeconds(packet.getData());
+}
+extern const bt_dbg_entry btSecondEntry =
+{ secondEntry,  mPacket.BT_SECONDS};
+
+
 void btCommandSend(uint8_t argc, char **argv)
 {
-    mBt.transmit_command();
+    Bluetooth.transmit_command();
 
     if (argc > 1)
     {
         for (int i = 0; i < argc - 1; i++)
         {
-            mBt.transmit_array(argv[i + 1]);
-            mBt.transmit_array(" ");
+            Bluetooth.transmit_array(argv[i + 1]);
+            Bluetooth.transmit_array(" ");
         }
     }
-    mBt.transmit_array("\r");
+    Bluetooth.transmit_array("\r");
 }
 extern const dbg_entry btCommandSendEntry =
 { btCommandSend, "at+ab" };
@@ -77,18 +103,18 @@ void btSend(uint8_t argc, char **argv)
                 myTime.getHours());
         uint8_t data[4];
         uint8_t len = packet.toBytes(data);
-        mBt.transmit_packet(data, len);
+        Bluetooth.transmit_packet(data, len);
         _delay_us(10);
 
-//		cPacket packetMinute = cPacket(packetMinute.TYPE_SET, packetMinute.BT_MINUTES, myTime.getMinutes());
-//		len = packetMinute.getBytes(data);
-//		mBt.transmit_packet(data, len);
-//		_delay_us(10);
-//
-//		cPacket packetSecond = cPacket(packetSecond.TYPE_SET, packetSecond.BT_SECONDS, myTime.getSeconds());
-//		len = packetSecond.getBytes(data);
-//		mBt.transmit_packet(data, len);
-//		_delay_us(10);
+		cPacket packetMinute = cPacket(packetMinute.TYPE_SET, packetMinute.BT_MINUTES, myTime.getMinutes());
+		len = packetMinute.toBytes(data);
+		Bluetooth.transmit_packet(data, len);
+		_delay_us(10);
+
+		cPacket packetSecond = cPacket(packetSecond.TYPE_SET, packetSecond.BT_SECONDS, myTime.getSeconds());
+		len = packetSecond.toBytes(data);
+		Bluetooth.transmit_packet(data, len);
+		_delay_us(10);
 
 //		for(uint8_t i=0; i<argc-1;i++)
 //		{
@@ -250,8 +276,8 @@ void btnTrigger(void)
     }
     else
     {
-        mLights.setLevel(mLights.LIGHT_KITCHEN_TOP, 5);
-        mLights.setLevel(mLights.LIGHT_KITCHEN_BOT, 5);
+        mLights.setLevel(mLights.LIGHT_KITCHEN_TOP, 5, 5);
+        mLights.setLevel(mLights.LIGHT_KITCHEN_BOT, 5, 1);
     }
 }
 
@@ -305,9 +331,9 @@ int main(void)
     myRemote.setCB(3, button3_run);
     myRemote.setCB(4, button4_run);
 
-    mBt.init();
+//    mBt.init();
 
-    mBt.transmit_array("AT\n\r");
+//    mBt.transmit_array("AT\n\r");
 
     cOutput bt_reset = cOutput(PORT_PG(5));
     bt_reset.set();
@@ -317,10 +343,10 @@ int main(void)
     {
         watchdogReset();
         mLights.runDelay();
+        Bluetooth.run();
+        _delay_ms(2);
 
-        _delay_ms(10);
-
-        if (++delayDivider > 9)
+        if (++delayDivider > 49)
         {
             delayDivider = 0;
             Terminal.run();
@@ -329,7 +355,7 @@ int main(void)
             analogSampler.run();
             myRemote.run();
             mBtn.run();
-            mBt.run();
+//            mBt.run();
         }
     }
     return 0;

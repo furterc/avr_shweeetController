@@ -1,10 +1,3 @@
-/*
- * cTime.h
- *
- *  Created on: 11 Mar 2017
- *      Author: christo
- */
-
 #ifndef TIME_H_
 #define TIME_H_
 

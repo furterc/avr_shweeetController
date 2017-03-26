@@ -6,7 +6,7 @@
 #include "TimerPwm.h"
 
 #define LEVEL_0_DUTY 0
-#define LEVEL_1_DUTY 0x5
+#define LEVEL_1_DUTY 0xA
 #define LEVEL_2_DUTY 0x15
 #define LEVEL_3_DUTY 0x30
 #define LEVEL_4_DUTY 0x50
@@ -56,6 +56,7 @@ public:
     void incLevel(Lights);
     void setLevel(Lights, Levels);
     void setLevel(Lights, uint8_t);
+    void setLevel(Lights, uint8_t, uint8_t);
     uint8_t getLevel(Lights);
     void runDelay();
     virtual ~cLights();

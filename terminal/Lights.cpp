@@ -46,12 +46,12 @@ void cLights::incLevel(Lights light)
 
     uint8_t l = mLightLevels[(uint8_t)light];
 
-    if(l< LEVEL_COUNT)
+    if(l < LEVEL_COUNT-1)
         l++;
     else
         l = 0;
 
-    setLevel(light, l);
+    setLevel(light, l, 6);
 }
 
 void cLights::setLevel(Lights light, Levels level)
@@ -60,7 +60,7 @@ void cLights::setLevel(Lights light, Levels level)
         switch ((uint8_t) level)
         {
         case LEVEL_0:
-            setSoft(light, 1, LEVEL_0_DUTY);
+            setSoft(light, 6, LEVEL_0_DUTY);
             break;
         case LEVEL_1:
             setSoft(light, 1, LEVEL_1_DUTY);
@@ -81,10 +81,38 @@ void cLights::setLevel(Lights light, Levels level)
     mLightLevels[(uint8_t) light] = (uint8_t)level;
 }
 
+
+void cLights::setLevel(Lights light, uint8_t level, uint8_t delay)
+{
+    if ((uint8_t) level < LEVEL_COUNT)
+        switch (level)
+        {
+        case LEVEL_0:
+            setSoft(light, delay, LEVEL_0_DUTY);
+            break;
+        case LEVEL_1:
+            setSoft(light, delay, LEVEL_1_DUTY);
+            break;
+        case LEVEL_2:
+            setSoft(light, delay, LEVEL_2_DUTY);
+            break;
+        case LEVEL_3:
+            setSoft(light, delay, LEVEL_3_DUTY);
+            break;
+        case LEVEL_4:
+            setSoft(light, delay, LEVEL_4_DUTY);
+            break;
+        case LEVEL_5:
+            setSoft(light, delay, LEVEL_5_DUTY);
+            break;
+        }
+    mLightLevels[(uint8_t) light] = level;
+}
+
 void cLights::setLevel(Lights light, uint8_t level)
 {
     if ((uint8_t) level < LEVEL_COUNT)
-        switch ((uint8_t) level)
+        switch (level)
         {
         case 0:
             setSoft(light, 1, LEVEL_0_DUTY);
