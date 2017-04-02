@@ -15,6 +15,8 @@
 #define LEVEL_COUNT 6
 #define LIGHT_COUNT 4
 
+
+
 class cLights
 {
     typedef enum
@@ -53,6 +55,7 @@ public:
 
     cLights();
     void setSoft(Lights, uint8_t, uint8_t);
+    uint8_t getDuty(Lights);
     void incLevel(Lights);
     void setLevel(Lights, Levels);
     void setLevel(Lights, uint8_t);
@@ -61,5 +64,7 @@ public:
     void runDelay();
     virtual ~cLights();
 };
+
+extern cLights mLights;
 
 #endif /* LIGHTS_H_ */

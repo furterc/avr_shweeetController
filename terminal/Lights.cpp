@@ -1,11 +1,85 @@
-/*
- * Lights.cpp
- *
- *  Created on: 25 Mar 2017
- *      Author: christo
- */
-
 #include "Lights.h"
+#include "Bluetooth.h"
+#include "Packet.h"
+
+#include <terminal.h>
+
+cPacket packet;
+void kitchenTop(cPacket packet)
+{
+    if (packet.getType() == packet.TYPE_GET)
+    {
+        packet.setType(packet.TYPE_SET);
+        uint8_t data = mLights.getDuty(mLights.LIGHT_KITCHEN_TOP);
+
+        packet.setData(data);
+        uint8_t bytes[4];
+        packet.toBytes(bytes);
+        Bluetooth.transmit_packet(bytes, 4);
+        return;
+    }
+    else
+        mLights.setSoft(mLights.LIGHT_KITCHEN_TOP, 5, packet.getData());
+}
+extern const bt_dbg_entry btKitchenTop =
+{ kitchenTop, packet.BT_KITCH_TOP };
+
+void kitchenBot(cPacket packet)
+{
+    if (packet.getType() == packet.TYPE_GET)
+    {
+        packet.setType(packet.TYPE_SET);
+        uint8_t data = mLights.getDuty(mLights.LIGHT_KITCHEN_BOT);
+
+        packet.setData(data);
+        uint8_t bytes[4];
+        packet.toBytes(bytes);
+        Bluetooth.transmit_packet(bytes, 4);
+        return;
+    }
+    else
+        mLights.setSoft(mLights.LIGHT_KITCHEN_BOT, 5, packet.getData());
+}
+extern const bt_dbg_entry btKitchenBot =
+{ kitchenBot, packet.BT_KITCH_BOT };
+
+void studyTop(cPacket packet)
+{
+    if (packet.getType() == packet.TYPE_GET)
+    {
+        packet.setType(packet.TYPE_SET);
+        uint8_t data = mLights.getDuty(mLights.LIGHT_STUDY_TOP);
+
+        packet.setData(data);
+        uint8_t bytes[4];
+        packet.toBytes(bytes);
+        Bluetooth.transmit_packet(bytes, 4);
+        return;
+    }
+    else
+        mLights.setSoft(mLights.LIGHT_STUDY_TOP, 5, packet.getData());
+}
+extern const bt_dbg_entry btStudyTop=
+{ studyTop, packet.BT_STUDY_TOP};
+
+void studyBot(cPacket packet)
+{
+    if (packet.getType() == packet.TYPE_GET)
+    {
+        packet.setType(packet.TYPE_SET);
+        uint8_t data = mLights.getDuty(mLights.LIGHT_STUDY_BOT);
+
+        packet.setData(data);
+        uint8_t bytes[4];
+        packet.toBytes(bytes);
+        Bluetooth.transmit_packet(bytes, 4);
+        return;
+    }
+    else
+        mLights.setSoft(mLights.LIGHT_STUDY_BOT, 5, packet.getData());
+}
+extern const bt_dbg_entry btStudyBot=
+{ studyBot, packet.BT_STUDY_BOT};
 
 cLights::cLights()
 {
@@ -39,14 +113,38 @@ void cLights::setSoft(Lights light, uint8_t delay, uint8_t duty)
     }
 }
 
+uint8_t cLights::getDuty(Lights light)
+{
+    switch (light)
+    {
+    case LIGHT_KITCHEN_TOP:
+        return kitchenTop.getDutyC();
+        break;
+    case LIGHT_KITCHEN_BOT:
+        return kitchenBot.getDutyC();
+        break;
+    case LIGHT_STUDY_TOP:
+        return studyTop.getDutyC();
+        break;
+    case LIGHT_STUDY_BOT:
+        return studyBot.getDutyC();
+        break;
+    default:
+        return 0;
+        break;
+    }
+
+    return 0;
+}
+
 void cLights::incLevel(Lights light)
 {
-    if ((uint8_t)light > LIGHT_COUNT-1)
+    if ((uint8_t) light > LIGHT_COUNT - 1)
         return;
 
-    uint8_t l = mLightLevels[(uint8_t)light];
+    uint8_t l = mLightLevels[(uint8_t) light];
 
-    if(l < LEVEL_COUNT-1)
+    if (l < LEVEL_COUNT - 1)
         l++;
     else
         l = 0;
@@ -78,9 +176,8 @@ void cLights::setLevel(Lights light, Levels level)
             setSoft(light, 1, LEVEL_5_DUTY);
             break;
         }
-    mLightLevels[(uint8_t) light] = (uint8_t)level;
+    mLightLevels[(uint8_t) light] = (uint8_t) level;
 }
-
 
 void cLights::setLevel(Lights light, uint8_t level, uint8_t delay)
 {
@@ -138,7 +235,7 @@ void cLights::setLevel(Lights light, uint8_t level)
 }
 uint8_t cLights::getLevel(Lights light)
 {
-    return mLightLevels[(uint8_t)light];
+    return mLightLevels[(uint8_t) light];
 }
 
 void cLights::runDelay()
@@ -151,6 +248,7 @@ void cLights::runDelay()
 
 cLights::~cLights()
 {
-    // TODO Auto-generated destructor stub
 }
+
+cLights mLights;
 

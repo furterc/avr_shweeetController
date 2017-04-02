@@ -22,7 +22,11 @@ public:
     typedef enum {
         BT_HOURS,
         BT_MINUTES,
-        BT_SECONDS
+        BT_SECONDS,
+        BT_KITCH_TOP,
+        BT_KITCH_BOT,
+        BT_STUDY_TOP,
+        BT_STUDY_BOT,
     } Tag;
 
     static uint8_t check(uint8_t *, cPacket * packet);

@@ -35,7 +35,7 @@ void watchdogReset()
 //mBtUart mBt = mBtUart();
 //cBlueTerm mBtTerm = cBlueTerm(&mBt);
 cTime myTime = cTime();
-cLights mLights = cLights();
+//cLights mLights = cLights();
 
 
 cPacket mPacket;
@@ -331,10 +331,6 @@ int main(void)
     myRemote.setCB(3, button3_run);
     myRemote.setCB(4, button4_run);
 
-//    mBt.init();
-
-//    mBt.transmit_array("AT\n\r");
-
     cOutput bt_reset = cOutput(PORT_PG(5));
     bt_reset.set();
 
@@ -355,7 +351,6 @@ int main(void)
             analogSampler.run();
             myRemote.run();
             mBtn.run();
-//            mBt.run();
         }
     }
     return 0;
