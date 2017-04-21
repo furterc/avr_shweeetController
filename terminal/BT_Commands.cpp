@@ -7,6 +7,8 @@ extern const bt_dbg_entry btKitchenTop;
 extern const bt_dbg_entry btKitchenBot;
 extern const bt_dbg_entry btStudyTop;
 extern const bt_dbg_entry btStudyBot;
+extern const bt_dbg_entry btAlarmHour;
+extern const bt_dbg_entry btAlarmMinute;
 
 const bt_dbg_entry* bt_dbg_entries[] =
 {
@@ -17,5 +19,7 @@ const bt_dbg_entry* bt_dbg_entries[] =
 		&btKitchenBot,
         &btStudyTop,
         &btStudyBot,
+        &btAlarmHour,
+        &btAlarmMinute,
 		0
 };

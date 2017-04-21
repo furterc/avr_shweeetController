@@ -27,6 +27,8 @@ public:
         BT_KITCH_BOT,
         BT_STUDY_TOP,
         BT_STUDY_BOT,
+        BT_ALARM_HOUR,
+        BT_ALARM_MINUTE
     } Tag;
 
     static uint8_t check(uint8_t *, cPacket * packet);

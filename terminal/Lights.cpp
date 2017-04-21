@@ -29,9 +29,8 @@ void kitchenBot(cPacket packet)
     if (packet.getType() == packet.TYPE_GET)
     {
         packet.setType(packet.TYPE_SET);
-        uint8_t data = mLights.getDuty(mLights.LIGHT_KITCHEN_BOT);
 
-        packet.setData(data);
+        packet.setData(mLights.getDuty(mLights.LIGHT_KITCHEN_BOT));
         uint8_t bytes[4];
         packet.toBytes(bytes);
         Bluetooth.transmit_packet(bytes, 4);

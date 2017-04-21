@@ -34,30 +34,11 @@ void watchdogReset()
 
 //mBtUart mBt = mBtUart();
 //cBlueTerm mBtTerm = cBlueTerm(&mBt);
-cTime myTime = cTime();
+//cTime myTime = cTime();
 //cLights mLights = cLights();
 
 
-cPacket mPacket;
-void hourEntry(cPacket packet)
-{
-    myTime.setHours(packet.getData());
-}
-extern const bt_dbg_entry btHourEntry =
-{ hourEntry,  mPacket.BT_HOURS };
-void minuteEntry(cPacket packet)
-{
-    myTime.setMinutes(packet.getData());
-}
-extern const bt_dbg_entry btMinuteEntry =
-{ minuteEntry,  mPacket.BT_MINUTES};
 
-void secondEntry(cPacket packet)
-{
-    myTime.setSeconds(packet.getData());
-}
-extern const bt_dbg_entry btSecondEntry =
-{ secondEntry,  mPacket.BT_SECONDS};
 
 
 void btCommandSend(uint8_t argc, char **argv)
@@ -129,7 +110,7 @@ extern const dbg_entry btSendEntry =
 
 void reboot(uint8_t argc, char **argv)
 {
-    printp("reboot");
+    printp("rebooting..\n");
     do
     {
         for (;;)
@@ -335,15 +316,17 @@ int main(void)
     bt_reset.set();
 
     uint8_t delayDivider = 0;
+
+
     while (1)
     {
-        watchdogReset();
         mLights.runDelay();
-        Bluetooth.run();
-        _delay_ms(2);
+        _delay_ms(10);
 
-        if (++delayDivider > 49)
+        if (++delayDivider > 10)
         {
+            watchdogReset();
+            Bluetooth.run();
             delayDivider = 0;
             Terminal.run();
             heartbeat.run();

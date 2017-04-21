@@ -35,7 +35,8 @@ cBluetooth::cBluetooth()
 void cBluetooth::transmit_byte(uint8_t b)
 {
     //wait until the transmitter is ready
-    while (!(UCSR0A & (1 << UDRE0)));
+    while (!(UCSR0A & (1 << UDRE0)))
+        ;
 
     //write the data to the uart buffer
     UDR0 = b;
@@ -94,23 +95,13 @@ void cBluetooth::handleCommand()
     mHead = 0;
     mTail = 0;
 
-    if (mCommand[0] == 0x41 && mCommand[1] == 0x54)
-    {
-        printp("%s\n\r", mCommand);
-        return;
-    }
-
     cPacket packet = cPacket();
     if (cPacket::check((uint8_t*) mCommand, &packet) == 1)
     {
-        printp("0x%02X:0x%02X:0x%02X\n", packet.getType(), packet.getTag(),
-                packet.getData(), packet.getCrc());
-
         uint8_t idx = 0;
         const bt_dbg_entry *currBtEntry = bt_dbg_entries[idx++];
         while (currBtEntry)
         {
-            //printp("%s - %s\n", currEntry->command, mCommand);
             if ((currBtEntry->tag == packet.getTag()))
             {
                 currBtEntry->func(packet);
@@ -138,7 +129,7 @@ void cBluetooth::handle(char ch)
 
 cBluetooth::~cBluetooth()
 {
-    // TODO Auto-generated destructor stub
+
 }
 
 ISR(USART0_RX_vect)
