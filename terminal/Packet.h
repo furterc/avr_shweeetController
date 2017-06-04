@@ -28,7 +28,17 @@ public:
         BT_STUDY_TOP,
         BT_STUDY_BOT,
         BT_ALARM_HOUR,
-        BT_ALARM_MINUTE
+        BT_ALARM_MINUTE,
+        BT_ALARM_ACTIVE,
+        BT_BED_0,
+        BT_BED_1,
+        BT_BED_2,
+        BT_BED_3,
+        BT_BED_4,
+        BT_BED_5,
+        BT_BED_6,
+        BT_BED_7,
+        BT_BED_8
     } Tag;
 
     static uint8_t check(uint8_t *, cPacket * packet);

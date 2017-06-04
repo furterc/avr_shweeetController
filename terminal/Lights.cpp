@@ -112,6 +112,26 @@ void cLights::setSoft(Lights light, uint8_t delay, uint8_t duty)
     }
 }
 
+void cLights::setSoftDelayed(uint8_t dutyDelay, Lights light, uint8_t delay, uint8_t duty)
+{
+    switch (light)
+    {
+    case LIGHT_KITCHEN_TOP:
+        kitchenTopRun.setDelayedDuty(dutyDelay, delay, duty);
+        break;
+    case LIGHT_KITCHEN_BOT:
+        kitchenBotRun.setDelayedDuty(dutyDelay, delay, duty);
+        break;
+    case LIGHT_STUDY_TOP:
+        studyTopRun.setDelayedDuty(dutyDelay, delay, duty);
+        break;
+
+    case LIGHT_STUDY_BOT:
+        studyBotRun.setDuty(delay, duty);
+        break;
+    }
+}
+
 uint8_t cLights::getDuty(Lights light)
 {
     switch (light)

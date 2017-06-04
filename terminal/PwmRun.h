@@ -16,11 +16,13 @@ class cPwmRun {
 	uint8_t mNewDutyC;
 	uint8_t mDelay;
 	uint8_t mDelayCnt;
+	uint8_t mDutyDelay;
 	bool mEnabled = false;
 
 public:
 	cPwmRun(cPWM *);
 	void setDuty(uint8_t,uint8_t);
+	void setDelayedDuty(uint8_t dutyDelay, uint8_t delay, uint8_t newDuty);
 	void run();
 
 	virtual ~cPwmRun();

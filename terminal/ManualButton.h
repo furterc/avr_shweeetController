@@ -15,7 +15,7 @@ class cManualButton {
 	/* Setup Button port */
 	#define MAN_BTN_DDR DDRH
 	#define MAN_BTN_PIN PINH
-	#define MAN_BTN_INPUTPIN PH0
+	#define MAN_BTN_INPUTPIN PH2
 
 	bool mState = false;
 	uint8_t mCount = 0;

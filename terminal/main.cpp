@@ -4,23 +4,23 @@
 #include <util/delay.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <terminal.h>
 #include <led.h>
 #include <port.h>
 #include <heartbeat.h>
-#include <analog_sampler.h>
 
-//#include "mBtUart.h"
 #include "timer_two.h"
 #include "Packet.h"
 #include "Bluetooth.h"
-//#include "BT_Commands.h"
+#include "button.h"
 
 #include "Lights.h"
 #include "ManualButton.h"
 #include "Remote.h"
 #include "Time.h"
+#include "RS485.h"
 
 extern "C"
 {
@@ -32,14 +32,27 @@ void watchdogReset()
     __asm__ __volatile__ ( "wdr\n" );
 }
 
-//mBtUart mBt = mBtUart();
-//cBlueTerm mBtTerm = cBlueTerm(&mBt);
-//cTime myTime = cTime();
-//cLights mLights = cLights();
+cPacket mpacket = cPacket();
 
-
-
-
+void rs485Test(cPacket packet)
+{
+    printp("FUCKYEA \n data: %d\n", packet.getData());
+//    if (packet.getType() == packet.TYPE_GET)
+//    {
+//        mpacket.setType(packet.TYPE_SET);
+//        uint8_t data = mLights.getDuty(mLights.LIGHT_STUDY_TOP);
+//
+//        mpacket.setData(data);
+//        uint8_t bytes[4];
+//        mpacket.toBytes(bytes);
+//        Bluetooth.transmit_packet(bytes, 4);
+//        return;
+//    }
+//    else
+//        mLights.setSoft(mLights.LIGHT_STUDY_TOP, 5, packet.getData());
+}
+extern const rs485_dbg_entry rs485TestEntry=
+{ rs485Test, mpacket.BT_STUDY_TOP};
 
 void btCommandSend(uint8_t argc, char **argv)
 {
@@ -58,9 +71,63 @@ void btCommandSend(uint8_t argc, char **argv)
 extern const dbg_entry btCommandSendEntry =
 { btCommandSend, "at+ab" };
 
+//cOutput workspaceLED = cOutput(PORT_PH(6));
+void light(uint8_t argc, char **argv)
+{
+    if (argc == 1)
+    {
+        //display data
+        printp("Kitchen\n Top: %d\n Bot: %d\n",
+                mLights.getDuty(mLights.LIGHT_KITCHEN_TOP),
+                mLights.getDuty(mLights.LIGHT_KITCHEN_BOT));
+        printp("Study\n Top: %d\n Bot: %d\n",
+                mLights.getDuty(mLights.LIGHT_STUDY_TOP),
+                mLights.getDuty(mLights.LIGHT_STUDY_BOT));
+        return;
+    }
+
+    if (argc == 2)
+    {
+        if (!strcmp(argv[1], "k"))
+        {
+            if (mLights.getDuty(mLights.LIGHT_KITCHEN_TOP) != 0
+                    || mLights.getDuty(mLights.LIGHT_KITCHEN_BOT) != 0)
+            {
+                mLights.setSoft(mLights.LIGHT_KITCHEN_TOP, 0, 0);
+                mLights.setSoftDelayed(255, mLights.LIGHT_KITCHEN_BOT, 0, 0);
+            }
+            else
+            {
+                mLights.setSoftDelayed(150, mLights.LIGHT_KITCHEN_TOP, 4, 255);
+                mLights.setSoft(mLights.LIGHT_KITCHEN_BOT, 4, 255);
+            }
+        }
+
+        if (!strcmp(argv[1], "s"))
+        {
+            if (mLights.getDuty(mLights.LIGHT_STUDY_TOP) != 0
+                    || mLights.getDuty(mLights.LIGHT_STUDY_BOT) != 0)
+            {
+                mLights.setSoft(mLights.LIGHT_STUDY_TOP, 0, 0);
+                mLights.setSoftDelayed(255, mLights.LIGHT_STUDY_BOT, 0, 0);
+//                workspaceLED.reset();
+            }
+            else
+            {
+                mLights.setSoftDelayed(150, mLights.LIGHT_STUDY_TOP, 4, 255);
+                mLights.setSoft(mLights.LIGHT_STUDY_BOT, 4, 255);
+//                workspaceLED.set();
+            }
+        }
+    }
+
+}
+extern const dbg_entry lightEntry =
+{ light, "l" };
+
 void time(uint8_t argc, char **argv)
 {
-    if (argc > 3)
+    if (argc > 1)
     {
         myTime.setHours(atoi(argv[1]));
         myTime.setMinutes(atoi(argv[2]));
@@ -78,32 +145,14 @@ extern const dbg_entry timeEntry =
 
 void btSend(uint8_t argc, char **argv)
 {
-    if (argc > 1)
-    {
-        cPacket packet = cPacket(packet.TYPE_SET, packet.BT_HOURS,
-                myTime.getHours());
-        uint8_t data[4];
-        uint8_t len = packet.toBytes(data);
-        Bluetooth.transmit_packet(data, len);
-        _delay_us(10);
+    cPacket packet = cPacket(72, 73, 10, 13);
 
-		cPacket packetMinute = cPacket(packetMinute.TYPE_SET, packetMinute.BT_MINUTES, myTime.getMinutes());
-		len = packetMinute.toBytes(data);
-		Bluetooth.transmit_packet(data, len);
-		_delay_us(10);
+    uint8_t data[4];
+    uint8_t len = packet.toBytes(data);
+    RS485.transmit_packet(data, len);
+    _delay_us(10);
 
-		cPacket packetSecond = cPacket(packetSecond.TYPE_SET, packetSecond.BT_SECONDS, myTime.getSeconds());
-		len = packetSecond.toBytes(data);
-		Bluetooth.transmit_packet(data, len);
-		_delay_us(10);
-
-//		for(uint8_t i=0; i<argc-1;i++)
-//		{
-//			mBt.transmit_array(argv[i+1]);
-//			mBt.transmit_array(" ");
-//		}
-//		mBt.transmit_array("\r");
-    }
+    printp("data out: %c,%c,%c,%c", packet.getType(), packet.getTag(), packet.getData(), packet.getCrc());
 }
 extern const dbg_entry btSendEntry =
 { btSend, "b" };
@@ -129,87 +178,7 @@ void backLight(uint8_t argc, char **argv)
     bt_reset.set();
 }
 extern const dbg_entry backlightEntry =
-{ backLight, "l" };
-
-cOutput relay1(PORT_PF(0));
-cOutput relay2(PORT_PF(1));
-cOutput relay3(PORT_PF(2));
-cOutput relay4(PORT_PF(3));
-void debugOut(uint8_t argc, char **argv)
-{
-    cOutput *relay = 0;
-    if (argc > 1)
-    {
-        uint8_t num = atoi(argv[1]);
-        switch (num)
-        {
-        case 1:
-            relay = &relay1;
-            break;
-        case 2:
-            relay = &relay2;
-            break;
-        case 3:
-            relay = &relay3;
-            break;
-        case 4:
-            relay = &relay4;
-            break;
-        default:
-            return;
-        }
-
-        if (argc > 2)
-        {
-            bool state = atoi(argv[2]);
-            printp("%s - ", state ? "set" : "reset", num);
-            if (state)
-                relay->set();
-            else
-                relay->reset();
-        }
-
-        bool state = relay->get();
-        printp("RL%d: %s\n", num, state ? "ON" : "OFF");
-    }
-    else
-    {
-        printp("RL1: %s\n", relay1.get() ? "ON" : "OFF");
-        printp("RL2: %s\n", relay2.get() ? "ON" : "OFF");
-        printp("RL3: %s\n", relay3.get() ? "ON" : "OFF");
-        printp("RL4: %s\n", relay4.get() ? "ON" : "OFF");
-    }
-}
-extern const dbg_entry outputEntry =
-{ debugOut, "o" };
-
-cAnalog analogIn1(4);
-cAnalog analogIn2(5);
-cAnalog analogIn3(6);
-cAnalog analogIn4(7);
-
-void measureTemp(uint8_t argc, char **argv)
-{
-    printp("Measuring temp:\n");
-
-    double sample = analogIn1.lastSample();
-    double temp = 500 * (sample / 1024.0) - 273.0;
-    printf(" 1: %.1f\n", temp);
-
-    sample = analogIn2.lastSample();
-    temp = 500 * (sample / 1024.0) - 273.0;
-    printf(" 2: %.1f\n", temp);
-
-    sample = analogIn3.lastSample();
-    temp = 5 * (sample / 1024.0);
-    printf(" 3: %.1f\n", temp);
-
-    sample = analogIn4.lastSample();
-    temp = 5 * (sample / 1024.0);
-    printf(" 4: %.1f\n", temp);
-}
-extern const dbg_entry mainEntry =
-{ measureTemp, "temp" };
+{ backLight, "bl" };
 
 cRemote myRemote;
 void button4_run(void)
@@ -234,12 +203,12 @@ void button1_run(void)
 
 void pirOffCB(void)
 {
-
+    printp("PIR off\n");
 }
 
 void pirTriggerCB(void)
 {
-
+    printp("PIR off\n");
 }
 
 void timerTwoCB(void)
@@ -247,18 +216,18 @@ void timerTwoCB(void)
     myTime.incTime();
 }
 
-//uint8_t onOffState = 0;
 void btnTrigger(void)
 {
-    if (mLights.getLevel(mLights.LIGHT_KITCHEN_TOP) != 0 || mLights.getLevel(mLights.LIGHT_KITCHEN_BOT) != 0)
+    if (mLights.getDuty(mLights.LIGHT_KITCHEN_TOP) != 0
+            || mLights.getDuty(mLights.LIGHT_KITCHEN_BOT) != 0)
     {
-        mLights.setLevel(mLights.LIGHT_KITCHEN_TOP, 0);
-        mLights.setLevel(mLights.LIGHT_KITCHEN_BOT, 0);
+        mLights.setSoft(mLights.LIGHT_KITCHEN_TOP, 0, 0);
+        mLights.setSoftDelayed(255, mLights.LIGHT_KITCHEN_BOT, 0, 0);
     }
     else
     {
-        mLights.setLevel(mLights.LIGHT_KITCHEN_TOP, 5, 5);
-        mLights.setLevel(mLights.LIGHT_KITCHEN_BOT, 5, 1);
+        mLights.setSoftDelayed(150, mLights.LIGHT_KITCHEN_TOP, 4, 255);
+        mLights.setSoft(mLights.LIGHT_KITCHEN_BOT, 4, 255);
     }
 }
 
@@ -291,16 +260,11 @@ int main(void)
     cLED led4(&led4red, &led4green);
 
     cHeartbeat heartbeat(&status);
-    cHeartbeat heartbeat2(&led4);
 
     timerTwo_init();
     timerTwo_setCB(timerTwoCB);
     cManualButton mBtn = cManualButton();
     mBtn.btnSetCB(btnTrigger);
-
-    cAnalog *analogList[] =
-    { &analogIn1, &analogIn2, &analogIn3, &analogIn4, 0 };
-    cAnalogSampler analogSampler(analogList);
 
     lcd_init(LCD_DISP_ON);
     lcd_led(0);
@@ -317,6 +281,7 @@ int main(void)
 
     uint8_t delayDivider = 0;
 
+//    uint8_t b = 80;
 
     while (1)
     {
@@ -325,17 +290,16 @@ int main(void)
 
         if (++delayDivider > 10)
         {
+            Buttons.run();
             watchdogReset();
             Bluetooth.run();
+            RS485.run();
             delayDivider = 0;
             Terminal.run();
             heartbeat.run();
-            heartbeat2.run();
-            analogSampler.run();
             myRemote.run();
             mBtn.run();
         }
     }
     return 0;
 }
-
