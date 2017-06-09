@@ -32,27 +32,32 @@ void watchdogReset()
     __asm__ __volatile__ ( "wdr\n" );
 }
 
-cPacket mpacket = cPacket();
-
-void rs485Test(cPacket packet)
+void printBedPWM(uint8_t i, uint8_t duty)
 {
-    printp("FUCKYEA \n data: %d\n", packet.getData());
-//    if (packet.getType() == packet.TYPE_GET)
-//    {
-//        mpacket.setType(packet.TYPE_SET);
-//        uint8_t data = mLights.getDuty(mLights.LIGHT_STUDY_TOP);
-//
-//        mpacket.setData(data);
-//        uint8_t bytes[4];
-//        mpacket.toBytes(bytes);
-//        Bluetooth.transmit_packet(bytes, 4);
-//        return;
-//    }
-//    else
-//        mLights.setSoft(mLights.LIGHT_STUDY_TOP, 5, packet.getData());
+    printp("pwm%d\t: %d\n", i, duty)
 }
-extern const rs485_dbg_entry rs485TestEntry=
-{ rs485Test, mpacket.BT_STUDY_TOP};
+
+cPacket mpacket = cPacket();
+void bed0(cPacket packet)
+{
+    printBedPWM(0, packet.getData());
+}
+extern const rs485_dbg_entry bed0Entry =
+{ bed0, mpacket.BT_BED_0 };
+
+void bed1(cPacket packet)
+{
+    printBedPWM(1, packet.getData());
+}
+extern const rs485_dbg_entry bed1Entry =
+{ bed1, mpacket.BT_BED_1 };
+
+void bed2(cPacket packet)
+{
+    printBedPWM(2, packet.getData());
+}
+extern const rs485_dbg_entry bed2Entry =
+{ bed2, mpacket.BT_BED_2 };
 
 void btCommandSend(uint8_t argc, char **argv)
 {
@@ -145,14 +150,41 @@ extern const dbg_entry timeEntry =
 
 void btSend(uint8_t argc, char **argv)
 {
-    cPacket packet = cPacket(72, 73, 10, 13);
-
+    cPacket packet = cPacket(0, 0, 0, 0);
     uint8_t data[4];
-    uint8_t len = packet.toBytes(data);
-    RS485.transmit_packet(data, len);
-    _delay_us(10);
 
-    printp("data out: %c,%c,%c,%c", packet.getType(), packet.getTag(), packet.getData(), packet.getCrc());
+    if (argc == 1)
+    {
+        packet.setType(packet.TYPE_GET);
+
+        packet.setTag(packet.BT_BED_0);
+        packet.toBytes(data);
+        RS485.transmit_packet(data, 4);
+
+        packet.setTag(packet.BT_BED_1);
+        packet.toBytes(data);
+        RS485.transmit_packet(data, 4);
+
+        packet.setTag(packet.BT_BED_2);
+        packet.toBytes(data);
+        RS485.transmit_packet(data, 4);
+
+//        packet.setTag(packet.BT_BED_3);
+//        packet.toBytes(data);
+//        RS485.transmit_packet(data, 4);
+        return;
+    }
+
+    uint8_t duty = atoi(argv[1]);
+
+    packet.setType(packet.TYPE_SET);
+    packet.setTag(packet.BT_BED_0);
+    packet.setData(duty);
+    packet.toBytes(data);
+    RS485.transmit_packet(data, 4);
+
+    printp("data out: %02X,%02X,%02X,%02X", packet.getType(), packet.getTag(),
+            packet.getData(), packet.getCrc());
 }
 extern const dbg_entry btSendEntry =
 { btSend, "b" };
