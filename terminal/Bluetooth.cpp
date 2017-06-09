@@ -12,8 +12,8 @@
 
 cBluetooth::cBluetooth()
 {
-    mHead = 0;
-    mTail = 0;
+    mDataReady = false;
+    mCommandLen = 0;
 
     DDRE &= ~(1 << 1);  //input
     DDRE |= (1 << 0);   //output
@@ -60,11 +60,26 @@ void cBluetooth::transmit_array(const char *str)
 
 void cBluetooth::transmit_packet(uint8_t * buff, uint8_t len)
 {
-    for (uint8_t i = 0; i < len; i++)
+    printp("data in: ");
+    for (uint8_t j = 0; j < len; j++)
     {
-        transmit_byte(buff[i]);
+        printp("%02X ", buff[j]);
     }
-    transmit_byte(0x0D);
+    printp("\n");
+
+    uint8_t frame_ptr[64];
+    uint32_t frame_length = 64;
+    cHDLCframer::frame(buff, 4, frame_ptr, &frame_length);
+
+    printp("hdlc len: %d\n", frame_length);
+
+    printp("data out: ");
+    for (uint8_t i = 0; i < frame_length; i++)
+    {
+        printp("%02X ", frame_ptr[i]);
+        transmit_byte(frame_ptr[i]);
+    }
+    printp("\n");
 }
 
 void cBluetooth::transmit_command()
@@ -78,52 +93,45 @@ void cBluetooth::transmit_command()
 
 void cBluetooth::run()
 {
-    while (mHead != mTail)
+    if (mDataReady)
     {
-        if ((mCommand[mTail] == '\n') || (mCommand[mTail] == '\r'))
-        {
-            handleCommand();
-        }
-        else
-            mTail++;
+        mDataReady = false;
+        handleCommand();
     }
 }
 
 void cBluetooth::handleCommand()
 {
-    mCommand[mTail] = 0;
-    mHead = 0;
-    mTail = 0;
+    mCommand[mCommandLen] = 0;
 
-    cPacket packet = cPacket();
-    if (cPacket::check((uint8_t*) mCommand, &packet) == 1)
+    uint8_t data[mCommandLen];
+    memcpy(&data, mCommand, mCommandLen);
+    memset(mCommand, 0xFF, 64);
+
+    cMsg cmsgIn = cMsg(data);
+    uint8_t idx = 0;
+    const bt_dbg_entry *currBtEntry = bt_dbg_entries[idx++];
+    while (currBtEntry)
     {
-        uint8_t idx = 0;
-        const bt_dbg_entry *currBtEntry = bt_dbg_entries[idx++];
-        while (currBtEntry)
+        if ((currBtEntry->tag == cmsgIn.getTag()))
         {
-            if ((currBtEntry->tag == packet.getTag()))
-            {
-                currBtEntry->func(packet);
-                return;
-            }
-
-            currBtEntry = bt_dbg_entries[idx++];
+            currBtEntry->func(cmsgIn);
+            return;
         }
-        return;
+        currBtEntry = bt_dbg_entries[idx++];
     }
-
-    printp("bt: %s\n\r", mCommand);
 }
 
-void cBluetooth::handle(char ch)
+void cBluetooth::handle(uint8_t ch)
 {
-    mCommand[mHead] = ch;
-
-    if (++mHead > 63)
+    int rxLen = framer.pack(ch);
+    if (rxLen)
     {
-        mHead = 0;
-        mTail = 0;
+
+        mCommandLen = rxLen;
+        memcpy(&mCommand, framer.buffer(), rxLen);
+//        framer.
+        mDataReady = true;
     }
 }
 
@@ -134,8 +142,7 @@ cBluetooth::~cBluetooth()
 
 ISR(USART0_RX_vect)
 {
-    char ch = UDR0;
-    Bluetooth.handle(ch);
+    Bluetooth.handle(UDR0);
 }
 
 cBluetooth Bluetooth;

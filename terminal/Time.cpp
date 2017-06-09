@@ -9,113 +9,96 @@
 #include "Time.h"
 #include "Bluetooth.h"
 #include "BT_Commands.h"
-#include "Packet.h"
 
 #include "Lights.h"
 
-cPacket mPacket;
-void hourEntry(cPacket packet)
+uint8_t getTime(uint8_t data0)
 {
-    if (packet.getType() == packet.TYPE_GET)
-{
-    packet.setType(packet.TYPE_SET);
+    switch (data0)
+    {
+    case 0:
+        return myTime.getHours();
+        break;
+    case 1:
+        return myTime.getMinutes();
+        break;
+    case 2:
+        return myTime.getSeconds();
+        break;
+    }
+    return 0;
+}
 
-    packet.setData(myTime.getHours());
-    uint8_t bytes[4];
-    packet.toBytes(bytes);
-    Bluetooth.transmit_packet(bytes, 4);
-    return;
-}
-else
-    myTime.setHours(packet.getData());
-}
-extern const bt_dbg_entry btHourEntry =
-{ hourEntry, mPacket.BT_HOURS };
-void minuteEntry(cPacket packet)
+void setTime(uint8_t data0, uint8_t data1)
 {
-    if (packet.getType() == packet.TYPE_GET)
+    switch (data0)
+    {
+    case 0:
+        myTime.setHours(data1);
+        break;
+    case 1:
+        myTime.setMinutes(data1);
+        break;
+    case 2:
+        myTime.setSeconds(data1);
+        break;
+    }
+}
+
+cMsg cmsg;
+void timeEntry(cMsg msg)
 {
-    packet.setType(packet.TYPE_SET);
-
-    packet.setData(myTime.getMinutes());
-    uint8_t bytes[4];
-    packet.toBytes(bytes);
-    Bluetooth.transmit_packet(bytes, 4);
-    return;
+    if (msg.getType() == msg.TYPE_GET)
+    {
+        msg.setType(msg.TYPE_SET);
+        msg.setData1(getTime(msg.getData0()));
+        uint8_t bytes[4];
+        msg.toBytes(bytes);
+        Bluetooth.transmit_packet(bytes, 4);
+    }
+    else
+        setTime(msg.getData0(), msg.getData1());
 }
-else
-    myTime.setMinutes(packet.getData());
-}
-extern const bt_dbg_entry btMinuteEntry =
-{ minuteEntry, mPacket.BT_MINUTES };
+extern const bt_dbg_entry btTime =
+{ timeEntry, cmsg.TAG_TIME };
 
-void secondEntry(cPacket packet)
+void alarmEntry(cMsg msg)
 {
-    if (packet.getType() == packet.TYPE_GET)
-{
-    packet.setType(packet.TYPE_SET);
+    if (msg.getType() == msg.TYPE_GET)
+    {
+        msg.setType(msg.TYPE_SET);
 
-    packet.setData(myTime.getSeconds());
-    uint8_t bytes[4];
-    packet.toBytes(bytes);
-    Bluetooth.transmit_packet(bytes, 4);
-    return;
-}
-else
-    myTime.setSeconds(packet.getData());
-}
-extern const bt_dbg_entry btSecondEntry =
-{ secondEntry, mPacket.BT_SECONDS };
+        if (msg.getData0() == 0)
+            msg.setData1(myTime.getAlarmHour());
+        else if (msg.getData0() == 1)
+            msg.setData1(myTime.getAlarmMinute());
 
-void alarmHour(cPacket packet)
-{
-    if (packet.getType() == packet.TYPE_GET)
-{
-    packet.setType(packet.TYPE_SET);
-
-    packet.setData(myTime.getAlarmHour());
-    uint8_t bytes[4];
-    packet.toBytes(bytes);
-    Bluetooth.transmit_packet(bytes, 4);
-    return;
+        uint8_t bytes[4];
+        msg.toBytes(bytes);
+        Bluetooth.transmit_packet(bytes, 4);
+    }
+    else
+    {
+        if (msg.getData0() == 0)
+            myTime.setAlarmHour(msg.getData1());
+        else if (msg.getData0() == 1)
+            myTime.setAlarmMinute(msg.getData1());
+    }
 }
-else
-    myTime.setAlarmHour(packet.getData());
-
-    printp("aHour: %d\n", packet.getData());
-}
-extern const bt_dbg_entry btAlarmHour =
-{ alarmHour, mPacket.BT_ALARM_HOUR };
-
-void alarmMinute(cPacket packet)
-{
-    if (packet.getType() == packet.TYPE_GET)
-{
-    packet.setType(packet.TYPE_SET);
-
-    packet.setData(myTime.getAlarmMinute());
-    uint8_t bytes[4];
-    packet.toBytes(bytes);
-    Bluetooth.transmit_packet(bytes, 4);
-    return;
-}
-else
-    myTime.setAlarmMinute(packet.getData());
-    printp("aMinute: %d\n", packet.getData());
-}
-extern const bt_dbg_entry btAlarmMinute= { alarmMinute, mPacket.BT_ALARM_MINUTE};
+extern const bt_dbg_entry btAlarm =
+{ alarmEntry, cmsg.TAG_ALARM };
 
 void cTime::checkAlarms()
 {
     if (mAlarmSet == 0)
-       return;
+        return;
 
     if (mAlarmHour == mHours && mAlarmMinute == mMinutes)
     {
         mLights.setSoft(mLights.LIGHT_KITCHEN_TOP, 255, 255);
         mLights.setSoft(mLights.LIGHT_KITCHEN_BOT, 255, 255);
 
-        printp("fokinpoeswat alarm!!!\n");
+        printp("alarm!!!\n");
     }
 }
 

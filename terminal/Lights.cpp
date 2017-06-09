@@ -1,84 +1,61 @@
 #include "Lights.h"
 #include "Bluetooth.h"
-#include "Packet.h"
+#include "cMsg.h"
 
 #include <terminal.h>
 
-cPacket packet;
-void kitchenTop(cPacket packet)
+cMsg lCMsg;
+void kitchen(cMsg msg)
 {
-    if (packet.getType() == packet.TYPE_GET)
+    if (msg.getType() == msg.TYPE_GET)
     {
-        packet.setType(packet.TYPE_SET);
-        uint8_t data = mLights.getDuty(mLights.LIGHT_KITCHEN_TOP);
+        msg.setType(msg.TYPE_SET);
 
-        packet.setData(data);
+        if (msg.getData0() == 0)
+            msg.setData1(mLights.getDuty(mLights.LIGHT_KITCHEN_TOP));
+        else if (msg.getData0() == 1)
+            msg.setData1(mLights.getDuty(mLights.LIGHT_KITCHEN_BOT));
+
         uint8_t bytes[4];
-        packet.toBytes(bytes);
+        msg.toBytes(bytes);
         Bluetooth.transmit_packet(bytes, 4);
-        return;
     }
     else
-        mLights.setSoft(mLights.LIGHT_KITCHEN_TOP, 5, packet.getData());
-}
-extern const bt_dbg_entry btKitchenTop =
-{ kitchenTop, packet.BT_KITCH_TOP };
-
-void kitchenBot(cPacket packet)
-{
-    if (packet.getType() == packet.TYPE_GET)
     {
-        packet.setType(packet.TYPE_SET);
+        if (msg.getData0() == 0)
+            mLights.setSoft(mLights.LIGHT_KITCHEN_TOP, 5, msg.getData1());
+        else if (msg.getData0() == 1)
+            mLights.setSoft(mLights.LIGHT_KITCHEN_BOT, 5, msg.getData1());
+    }
+}
+extern const bt_dbg_entry btKitchen =
+{ kitchen, lCMsg.TAG_LED_KITCHEN };
 
-        packet.setData(mLights.getDuty(mLights.LIGHT_KITCHEN_BOT));
+void study(cMsg msg)
+{
+    if (msg.getType() == msg.TYPE_GET)
+    {
+        msg.setType(msg.TYPE_SET);
+
+        if (msg.getData0() == 0)
+            msg.setData1(mLights.getDuty(mLights.LIGHT_STUDY_TOP));
+        else if (msg.getData0() == 11)
+            msg.setData1(mLights.getDuty(mLights.LIGHT_STUDY_BOT));
+
         uint8_t bytes[4];
-        packet.toBytes(bytes);
+        msg.toBytes(bytes);
         Bluetooth.transmit_packet(bytes, 4);
-        return;
     }
     else
-        mLights.setSoft(mLights.LIGHT_KITCHEN_BOT, 5, packet.getData());
-}
-extern const bt_dbg_entry btKitchenBot =
-{ kitchenBot, packet.BT_KITCH_BOT };
-
-void studyTop(cPacket packet)
-{
-    if (packet.getType() == packet.TYPE_GET)
     {
-        packet.setType(packet.TYPE_SET);
-        uint8_t data = mLights.getDuty(mLights.LIGHT_STUDY_TOP);
-
-        packet.setData(data);
-        uint8_t bytes[4];
-        packet.toBytes(bytes);
-        Bluetooth.transmit_packet(bytes, 4);
-        return;
+        if (msg.getData0() == 0)
+            mLights.setSoft(mLights.LIGHT_STUDY_TOP, 5, msg.getData1());
+        else if (msg.getData0() == 1)
+            mLights.setSoft(mLights.LIGHT_STUDY_BOT, 5, msg.getData1());
     }
-    else
-        mLights.setSoft(mLights.LIGHT_STUDY_TOP, 5, packet.getData());
 }
-extern const bt_dbg_entry btStudyTop=
-{ studyTop, packet.BT_STUDY_TOP};
-
-void studyBot(cPacket packet)
-{
-    if (packet.getType() == packet.TYPE_GET)
-    {
-        packet.setType(packet.TYPE_SET);
-        uint8_t data = mLights.getDuty(mLights.LIGHT_STUDY_BOT);
-
-        packet.setData(data);
-        uint8_t bytes[4];
-        packet.toBytes(bytes);
-        Bluetooth.transmit_packet(bytes, 4);
-        return;
-    }
-    else
-        mLights.setSoft(mLights.LIGHT_STUDY_BOT, 5, packet.getData());
-}
-extern const bt_dbg_entry btStudyBot=
-{ studyBot, packet.BT_STUDY_BOT};
+extern const bt_dbg_entry btStudy =
+{ study, lCMsg.TAG_LED_STUDY };
 
 cLights::cLights()
 {
@@ -112,7 +89,8 @@ void cLights::setSoft(Lights light, uint8_t delay, uint8_t duty)
     }
 }
 
-void cLights::setSoftDelayed(uint8_t dutyDelay, Lights light, uint8_t delay, uint8_t duty)
+void cLights::setSoftDelayed(uint8_t dutyDelay, Lights light, uint8_t delay,
+        uint8_t duty)
 {
     switch (light)
     {

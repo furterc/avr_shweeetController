@@ -68,26 +68,26 @@ void cRS485::handleCommand()
     mHead = 0;
     mTail = 0;
 
-    cPacket packet = cPacket();
-    if (cPacket::check((uint8_t*) mCommand, &packet) == 1)
-    {
-        uint8_t idx = 0;
-        const rs485_dbg_entry *currRS485Entry = rs485_dbg_entries[idx++];
-        while (currRS485Entry)
-        {
-            if ((currRS485Entry->tag == packet.getTag()))
-            {
-
-                currRS485Entry->func(packet);
-                return;
-            }
-
-            currRS485Entry = rs485_dbg_entries[idx++];
-        }
-        return;
-    }
-
-    printp("485!crc\n");
+//    cPacket packet = cPacket();
+//    if (cPacket::check((uint8_t*) mCommand, &packet) == 1)
+//    {
+//        uint8_t idx = 0;
+//        const rs485_dbg_entry *currRS485Entry = rs485_dbg_entries[idx++];
+//        while (currRS485Entry)
+//        {
+//            if ((currRS485Entry->tag == packet.getTag()))
+//            {
+//
+//                currRS485Entry->func(packet);
+//                return;
+//            }
+//
+//            currRS485Entry = rs485_dbg_entries[idx++];
+//        }
+//        return;
+//    }
+//
+//    printp("485!crc\n");
 }
 
 void cRS485::run()

@@ -9,10 +9,9 @@
 #define RS485_H_
 
 #include <stdint-gcc.h>
+#include "cMsg.h"
 
-#include "Packet.h"
-
-typedef void (*rs485_dbg_func)(cPacket packet);
+typedef void (*rs485_dbg_func)(cMsg packet);
 
 struct rs485_dbg_entry
 {

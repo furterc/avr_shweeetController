@@ -3,9 +3,10 @@
 
 #include <stdint-gcc.h>
 #include <avr/pgmspace.h>
-#include "Packet.h"
-
-typedef void (*bt_dbg_func)(cPacket packet);
+//#include "Packet.h"
+#include "cMsg.h"
+#include "hdlc_framer.h"
+typedef void (*bt_dbg_func)(cMsg packet);
 
 struct bt_dbg_entry
 {
@@ -17,9 +18,12 @@ void help();
 
 class cBluetooth
 {
-    uint8_t mHead;
-    uint8_t mTail;
-    char mCommand[64];
+    cHDLCframer framer = cHDLCframer(32);
+
+    bool mDataReady;
+    uint8_t mCommand[64];
+    uint8_t mCommandLen;
+
 
     void handleCommand();
     void transmit_byte(uint8_t b);
@@ -30,7 +34,7 @@ public:
 
     cBluetooth();
     void run();
-    void handle(char);
+    void handle(uint8_t);
     virtual ~cBluetooth();
 };
 
