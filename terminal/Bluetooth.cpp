@@ -127,10 +127,8 @@ void cBluetooth::handle(uint8_t ch)
     int rxLen = framer.pack(ch);
     if (rxLen)
     {
-
         mCommandLen = rxLen;
         memcpy(&mCommand, framer.buffer(), rxLen);
-//        framer.
         mDataReady = true;
     }
 }

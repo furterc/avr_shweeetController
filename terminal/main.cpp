@@ -11,13 +11,14 @@
 #include <port.h>
 #include <heartbeat.h>
 
+#include "inputCB.h"
 #include "timer_two.h"
 #include "cMsg.h"
 #include "Bluetooth.h"
 #include "button.h"
 
 #include "Lights.h"
-#include "ManualButton.h"
+//#include "ManualButton.h"
 #include "Remote.h"
 #include "Time.h"
 #include "RS485.h"
@@ -257,8 +258,14 @@ void timerTwoCB(void)
     myTime.incTime();
 }
 
-void btnTrigger(void)
+void hekRemoteCB(bool state)
 {
+    printp("hek4: %d\n", state);
+
+    //only interrupt upon click
+    if(state)
+        return;
+
     if (mLights.getDuty(mLights.LIGHT_KITCHEN_TOP) != 0
             || mLights.getDuty(mLights.LIGHT_KITCHEN_BOT) != 0)
     {
@@ -304,8 +311,8 @@ int main(void)
 
     timerTwo_init();
     timerTwo_setCB(timerTwoCB);
-    cManualButton mBtn = cManualButton();
-    mBtn.btnSetCB(btnTrigger);
+    cInputCB hekRemote = cInputCB(PORT_PH(2));
+    hekRemote.setCB(hekRemoteCB);
 
     lcd_init(LCD_DISP_ON);
     lcd_led(0);
@@ -339,7 +346,7 @@ int main(void)
             Terminal.run();
             heartbeat.run();
             myRemote.run();
-            mBtn.run();
+            hekRemote.run();
         }
     }
     return 0;
