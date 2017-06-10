@@ -11,14 +11,14 @@
 #include <port.h>
 #include <heartbeat.h>
 
-#include "inputCB.h"
+#include <inputCB.h>
+
 #include "timer_two.h"
 #include "cMsg.h"
 #include "Bluetooth.h"
 #include "button.h"
 
 #include "Lights.h"
-//#include "ManualButton.h"
 #include "Remote.h"
 #include "Time.h"
 #include "RS485.h"
@@ -37,28 +37,6 @@ void printBedPWM(uint8_t i, uint8_t duty)
 {
     printp("pwm%d\t: %d\n", i, duty)
 }
-
-//cPacket mpacket = cPacket();
-//void bed0(cPacket packet)
-//{
-//    printBedPWM(0, packet.getData());
-//}
-//extern const rs485_dbg_entry bed0Entry =
-//{ bed0, mpacket.BT_BED_0 };
-//
-//void bed1(cPacket packet)
-//{
-//    printBedPWM(1, packet.getData());
-//}
-//extern const rs485_dbg_entry bed1Entry =
-//{ bed1, mpacket.BT_BED_1 };
-//
-//void bed2(cPacket packet)
-//{
-//    printBedPWM(2, packet.getData());
-//}
-//extern const rs485_dbg_entry bed2Entry =
-//{ bed2, mpacket.BT_BED_2 };
 
 void btCommandSend(uint8_t argc, char **argv)
 {
@@ -222,26 +200,27 @@ void backLight(uint8_t argc, char **argv)
 extern const dbg_entry backlightEntry =
 { backLight, "bl" };
 
-cRemote myRemote;
-void button4_run(void)
+void remoteCB(uint8_t button, bool state)
 {
-    mLights.incLevel(mLights.LIGHT_STUDY_TOP);
+    switch(button)
+    {
+    case 0:
+        mLights.incLevel(mLights.LIGHT_KITCHEN_TOP);
+        break;
+    case 1:
+        mLights.incLevel(mLights.LIGHT_KITCHEN_BOT);
+        break;
+    case 2:
+        mLights.incLevel(mLights.LIGHT_STUDY_BOT);
+        break;
+    case 3:
+        mLights.incLevel(mLights.LIGHT_STUDY_TOP);
+        break;
+    default:
+        break;
+    }
 }
 
-void button3_run(void)
-{
-    mLights.incLevel(mLights.LIGHT_STUDY_BOT);
-}
-
-void button2_run(void)
-{
-    mLights.incLevel(mLights.LIGHT_KITCHEN_BOT);
-}
-
-void button1_run(void)
-{
-    mLights.incLevel(mLights.LIGHT_KITCHEN_TOP);
-}
 
 void pirOffCB(void)
 {
@@ -319,18 +298,13 @@ int main(void)
     lcd_gotoxy(4, 0);
     lcd_puts("SHWEEET!");
 
-    myRemote.setCB(1, button1_run);
-    myRemote.setCB(2, button2_run);
-    myRemote.setCB(3, button3_run);
-    myRemote.setCB(4, button4_run);
+    cRemote remote = cRemote(PORT_PL(2), PORT_PL(1), PORT_PL(6), PORT_PL(7));
+    remote.setCB(remoteCB);
 
     cOutput bt_reset = cOutput(PORT_PG(5));
     bt_reset.set();
 
     uint8_t delayDivider = 0;
-
-//    uint8_t b = 80;
-
     while (1)
     {
         mLights.runDelay();
@@ -345,8 +319,8 @@ int main(void)
             delayDivider = 0;
             Terminal.run();
             heartbeat.run();
-            myRemote.run();
             hekRemote.run();
+            remote.run();
         }
     }
     return 0;

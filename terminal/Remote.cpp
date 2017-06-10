@@ -2,58 +2,42 @@
 
 #include "Remote.h"
 
-cRemote::cRemote()
+cRemote::cRemote(uint8_t pin0, uint8_t pin1, uint8_t pin2, uint8_t pin3)
 {
+    mInput[0] = cInputCB(pin0);
+    mInput[1] = cInputCB(pin1);
+    mInput[2] = cInputCB(pin2);
+    mInput[3] = cInputCB(pin3);
+
+    for (uint8_t i=0; i < 4; i++)
+        mState[i] = mInput[i].getState();
 }
 
-uint8_t cRemote::setCB(uint8_t channel, void (*cb)(void))
+void cRemote::setCB(void (*cb)(uint8_t button, bool state))
 {
     if (!cb)
-        return 0;
+        return;
 
-    if (channel > 0 && channel < 5)
-    {
-        channel--; //decrement one to index from zero
-
-        //make pin input
-        BTN_DDR &= ~(1 << inputPin[channel]);
-
-        mBtn[channel].setCB(cb);
-        mBtn[channel].setState(!(BTN_PIN & _BV(inputPin[channel])));
-
-        return 1;
-    }
-    else
-        return 0;
+    callback = cb;
 }
 
 void cRemote::run()
 {
-    for (uint8_t idx = 0; idx < mBtnCount; idx++)
+    if (!callback)
+        return;
+
+    for (uint8_t j=0; j < 4; j++)
     {
-        if (!(BTN_PIN & _BV(inputPin[idx])))
+        mInput[j].run();
+        if (mState[j] != mInput[j].getState())
         {
-            if (!mBtn[idx].getState())
-            {
-                mBtn[idx].setState(true);
-                mBtn[idx].runCB();
-                printp("Remote %d\n", idx + 1);
-            }
-        }
-        else
-        {
-            if (mBtn[idx].getState())
-            {
-                mBtn[idx].setState(false);
-                mBtn[idx].runCB();
-                printp("Remote %d\n", idx + 1);
-            }
+            mState[j] = mInput[j].getState();
+            callback(j, mState[j]);
         }
     }
 }
 
 cRemote::~cRemote()
 {
-    // TODO Auto-generated destructor stub
 }
 

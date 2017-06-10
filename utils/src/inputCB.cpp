@@ -6,7 +6,7 @@
  */
 
 #include "inputCB.h"
-
+#include <terminal.h>
 cInputCB::cInputCB(uint8_t pin) : cPort(pin)
 {
     clearDDRn();
@@ -17,6 +17,11 @@ void cInputCB::setCB(void (*cb)(bool state))
 {
     if(cb)
         callback = cb;
+}
+
+bool cInputCB::getState()
+{
+    return get();
 }
 
 void cInputCB::run()

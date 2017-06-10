@@ -19,6 +19,7 @@ public:
     virtual ~cInputCB();
 
     void setCB(void (*cb)(bool));
+    bool getState();
     void run();
 };
 

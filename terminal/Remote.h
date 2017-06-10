@@ -8,24 +8,16 @@
 #ifndef REMOTE_H_
 #define REMOTE_H_
 
-#include <avr/io.h>
-
-#include "RemoteButton.h"
-
-/* Setup Button port */
-#define BTN_DDR DDRL
-#define BTN_PIN PINL
+#include <inputCB.h>
 
 class cRemote
 {
-    static const uint8_t mBtnCount = 4;
-    cRemoteButton mBtn[mBtnCount];
-    uint8_t inputPin[4] =
-    { PL2, PL1, PL6, PL7 };
-
+    bool mState[4];
+    cInputCB mInput[4] = {0,0,0,0};
+    void (*callback)(uint8_t, bool) = 0;
 public:
-    cRemote();
-    uint8_t setCB(uint8_t, void (*cb)(void));
+    cRemote(uint8_t pin1, uint8_t pin2, uint8_t pin3, uint8_t pin4);
+    void setCB(void (*cb)(uint8_t, bool));
     void run();
     virtual ~cRemote();
 };
