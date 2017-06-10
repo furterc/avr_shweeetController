@@ -79,7 +79,6 @@ void cBluetooth::transmit_packet(uint8_t * buff, uint8_t len)
         printp("%02X ", frame_ptr[i]);
         transmit_byte(frame_ptr[i]);
     }
-    printp("\n");
 }
 
 void cBluetooth::transmit_command()

@@ -7,16 +7,11 @@
 
 #include "RS485.h"
 
-extern const rs485_dbg_entry bed0Entry;
-extern const rs485_dbg_entry bed1Entry;
-extern const rs485_dbg_entry bed2Entry;
-
+extern const rs485_dbg_entry bedLEDEntry;
 
 const rs485_dbg_entry* rs485_dbg_entries[] =
 {
-        &bed0Entry,
-        &bed1Entry,
-        &bed2Entry,
+        &bedLEDEntry,
         0
 };
 

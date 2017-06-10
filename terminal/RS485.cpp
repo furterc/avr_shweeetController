@@ -10,6 +10,7 @@
 #include <avr/interrupt.h>
 #include <terminal.h>
 #include <output.h>
+#include <string.h>
 
 #define BAUD 9600
 #define MYUBBR ((F_CPU / (BAUD * 8UL))-1)
@@ -19,9 +20,8 @@ cOutput mWriteEnable = cOutput(PORT_PH(6));
 
 cRS485::cRS485()
 {
-    mHead = 0;
-    mTail = 0;
-    sei();
+    mDataReady = false;
+    mCommandLen = 0;
 
     DDRH |= _BV(PH1);   //output
 
@@ -44,7 +44,8 @@ void cRS485::transmit_byte(uint8_t b)
 {
     mWriteEnable.set();
     //wait until the transmitter is ready
-    while (!(UCSR2A & (1 << UDRE2)));
+    while (!(UCSR2A & (1 << UDRE2)))
+        ;
 
     //write the data to the uart buffer
     UDR2 = b;
@@ -55,69 +56,72 @@ void cRS485::transmit_byte(uint8_t b)
 
 void cRS485::transmit_packet(uint8_t * buff, uint8_t len)
 {
-    for (uint8_t i = 0; i < len; i++)
+    printp("485 data in: ");
+    for (uint8_t j = 0; j < len; j++)
     {
-        transmit_byte(buff[i]);
+        printp("%02X ", buff[j]);
     }
-    transmit_byte(0x0D);
+    printp("\n");
+
+    uint8_t frame_ptr[64];
+    uint32_t frame_length = 64;
+    cHDLCframer::frame(buff, 4, frame_ptr, &frame_length);
+
+    printp("hdlc len: %d\n", frame_length);
+
+    printp("485 data out: ");
+    for (uint8_t i = 0; i < frame_length; i++)
+    {
+        printp("%02X ", frame_ptr[i]);
+        transmit_byte(frame_ptr[i]);
+    }
 }
 
 void cRS485::handleCommand()
 {
-    mCommand[mTail] = 0;
-    mHead = 0;
-    mTail = 0;
+    mCommand[mCommandLen] = 0;
 
-//    cPacket packet = cPacket();
-//    if (cPacket::check((uint8_t*) mCommand, &packet) == 1)
-//    {
-//        uint8_t idx = 0;
-//        const rs485_dbg_entry *currRS485Entry = rs485_dbg_entries[idx++];
-//        while (currRS485Entry)
-//        {
-//            if ((currRS485Entry->tag == packet.getTag()))
-//            {
-//
-//                currRS485Entry->func(packet);
-//                return;
-//            }
-//
-//            currRS485Entry = rs485_dbg_entries[idx++];
-//        }
-//        return;
-//    }
-//
-//    printp("485!crc\n");
+        uint8_t data[mCommandLen];
+        memcpy(&data, mCommand, mCommandLen);
+        memset(mCommand, 0xFF, 64);
+
+        cMsg cmsgIn = cMsg(data);
+        uint8_t idx = 0;
+        const rs485_dbg_entry *curr485Entry = rs485_dbg_entries[idx++];
+        while (curr485Entry)
+        {
+            if ((curr485Entry->tag == cmsgIn.getTag()))
+            {
+                curr485Entry->func(cmsgIn);
+                return;
+            }
+            curr485Entry = rs485_dbg_entries[idx++];
+        }
 }
 
 void cRS485::run()
 {
-    while (mHead != mTail)
-    {
-        if ((mCommand[mTail] == '\n') || (mCommand[mTail] == '\r'))
+    if (mDataReady)
         {
+            mDataReady = false;
             handleCommand();
         }
-        else
-            mTail++;
-    }
 }
 
-void cRS485::handle(char ch)
+void cRS485::handle(uint8_t ch)
 {
-    mCommand[mHead] = ch;
-
-    if (++mHead > 63)
-    {
-        mHead = 0;
-        mTail = 0;
-    }
+    int rxLen = framer.pack(ch);
+        if (rxLen)
+        {
+            mCommandLen = rxLen;
+            memcpy(&mCommand, framer.buffer(), rxLen);
+            mDataReady = true;
+        }
 }
 
 ISR(USART2_RX_vect)
 {
-    char ch = UDR2;
-    RS485.handle(ch);
+    RS485.handle(UDR2);
 }
 
 ISR(USART2_TX_vect)

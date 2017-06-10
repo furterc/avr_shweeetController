@@ -38,6 +38,33 @@ void printBedPWM(uint8_t i, uint8_t duty)
     printp("pwm%d\t: %d\n", i, duty)
 }
 
+cMsg tmsg = cMsg();
+void test485(cMsg msg)
+{
+    if (msg.getType() == msg.TYPE_GET)
+    {
+        msg.setType(msg.TYPE_SET);
+
+//        if (msg.getData0() == 0)
+//            msg.setData1(mLights.getDuty(mLights.LIGHT_STUDY_TOP));
+//        else if (msg.getData0() == 11)
+//            msg.setData1(mLights.getDuty(mLights.LIGHT_STUDY_BOT));
+
+//        uint8_t bytes[4];
+//        msg.toBytes(bytes);
+//        Bluetooth.transmit_packet(bytes, 4);
+    }
+    else
+    {
+//        if (msg.getData0() == 0)
+//            mLights.setSoft(mLights.LIGHT_STUDY_TOP, 5, msg.getData1());
+//        else if (msg.getData0() == 1)
+//            mLights.setSoft(mLights.LIGHT_STUDY_BOT, 5, msg.getData1());
+    }
+}
+extern const rs485_dbg_entry bedLEDEntry =
+{ test485, tmsg.TAG_LED_STUDY };
+
 void btCommandSend(uint8_t argc, char **argv)
 {
     Bluetooth.transmit_command();
@@ -129,13 +156,12 @@ extern const dbg_entry timeEntry =
 
 void btSend(uint8_t argc, char **argv)
 {
-    cMsg cmsgOut = cMsg(0,0,0,0);
+    cMsg cmsgOut = cMsg(0, 0, 0, 0);
 
     uint8_t data[4];
     cmsgOut.toBytes(data);
 
     Bluetooth.transmit_packet(data, 4);
-
 
 //    memset(&data, 7, 4);
 
@@ -202,7 +228,7 @@ extern const dbg_entry backlightEntry =
 
 void remoteCB(uint8_t button, bool state)
 {
-    switch(button)
+    switch (button)
     {
     case 0:
         mLights.incLevel(mLights.LIGHT_KITCHEN_TOP);
@@ -221,7 +247,6 @@ void remoteCB(uint8_t button, bool state)
     }
 }
 
-
 void pirOffCB(void)
 {
     printp("PIR off\n");
@@ -239,11 +264,11 @@ void timerTwoCB(void)
 
 void hekRemoteCB(bool state)
 {
-    printp("hek4: %d\n", state);
-
     //only interrupt upon click
-    if(state)
+    if (state)
         return;
+
+     printp("hek4\n");
 
     if (mLights.getDuty(mLights.LIGHT_KITCHEN_TOP) != 0
             || mLights.getDuty(mLights.LIGHT_KITCHEN_BOT) != 0)
@@ -253,9 +278,15 @@ void hekRemoteCB(bool state)
     }
     else
     {
-        mLights.setSoftDelayed(150, mLights.LIGHT_KITCHEN_TOP, 4, 255);
-        mLights.setSoft(mLights.LIGHT_KITCHEN_BOT, 4, 255);
+        mLights.setSoftDelayed(50, mLights.LIGHT_KITCHEN_TOP, 2, 255);
+        mLights.setSoft(mLights.LIGHT_KITCHEN_BOT, 1, 255);
     }
+}
+
+void pirCB(bool state)
+{
+    if(state)
+        printp("pir: %d:%d\n", myTime.getHours(), myTime.getMinutes());
 }
 
 /* main program starts here */
@@ -290,19 +321,23 @@ int main(void)
 
     timerTwo_init();
     timerTwo_setCB(timerTwoCB);
+
     cInputCB hekRemote = cInputCB(PORT_PH(2));
     hekRemote.setCB(hekRemoteCB);
 
-    lcd_init(LCD_DISP_ON);
-    lcd_led(0);
-    lcd_gotoxy(4, 0);
-    lcd_puts("SHWEEET!");
+    cInputCB pir = cInputCB(PORT_PL(0));
+    pir.setCB(pirCB);
 
     cRemote remote = cRemote(PORT_PL(2), PORT_PL(1), PORT_PL(6), PORT_PL(7));
     remote.setCB(remoteCB);
 
     cOutput bt_reset = cOutput(PORT_PG(5));
     bt_reset.set();
+
+//    lcd_init(LCD_DISP_ON);
+//    lcd_led(0);
+//    lcd_gotoxy(4, 0);
+//    lcd_puts("SHWEEET!");
 
     uint8_t delayDivider = 0;
     while (1)
@@ -321,6 +356,7 @@ int main(void)
             heartbeat.run();
             hekRemote.run();
             remote.run();
+            pir.run();
         }
     }
     return 0;
