@@ -1,7 +1,6 @@
 #include "crc.h"
 
 
-
 const uint8_t escapedChars[] =
 {
       0x7E, 0x7D, 0x08, 0x7F
@@ -78,7 +77,6 @@ uint8_t cCrc::crc8_update(uint8_t data,uint8_t crc)
    }
 
    return crc;
-
 }
 
 uint8_t cCrc::crc8(uint8_t * data_ptr,uint32_t len)

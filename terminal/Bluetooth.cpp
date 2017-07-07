@@ -60,25 +60,12 @@ void cBluetooth::transmit_array(const char *str)
 
 void cBluetooth::transmit_packet(uint8_t * buff, uint8_t len)
 {
-    printp("data in: ");
-    for (uint8_t j = 0; j < len; j++)
-    {
-        printp("%02X ", buff[j]);
-    }
-    printp("\n");
-
     uint8_t frame_ptr[64];
     uint32_t frame_length = 64;
     cHDLCframer::frame(buff, 4, frame_ptr, &frame_length);
 
-    printp("hdlc len: %d\n", frame_length);
-
-    printp("data out: ");
     for (uint8_t i = 0; i < frame_length; i++)
-    {
-        printp("%02X ", frame_ptr[i]);
         transmit_byte(frame_ptr[i]);
-    }
 }
 
 void cBluetooth::transmit_command()

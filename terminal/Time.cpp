@@ -11,6 +11,10 @@
 #include "BT_Commands.h"
 
 #include "Lights.h"
+#include "cMsg.h"
+#include "RS485.h"
+#include "avr/delay.h"
+
 
 uint8_t getTime(uint8_t data0)
 {
@@ -99,6 +103,30 @@ void cTime::checkAlarms()
         mLights.setSoft(mLights.LIGHT_KITCHEN_BOT, 255, 255);
 
         printp("alarm!!!\n");
+
+        cMsg msg = cMsg(0,0,0,0);
+        msg.setType(msg.TYPE_SET);
+        msg.setTag(msg.TAG_LED_BED);
+        msg.setData1(255);
+        msg.setData0(0);
+        uint8_t data[4];
+        msg.toBytes(data);
+        RS485.transmit_packet(data,4);
+
+        _delay_ms(150);
+        msg.setData0(1);
+        msg.toBytes(data);
+        RS485.transmit_packet(data,4);
+
+        _delay_ms(150);
+        msg.setData0(2);
+        msg.toBytes(data);
+        RS485.transmit_packet(data,4);
+
+        _delay_ms(150);
+        msg.setData0(3);
+        msg.toBytes(data);
+        RS485.transmit_packet(data,4);
     }
 }
 

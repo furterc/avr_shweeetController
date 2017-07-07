@@ -1,6 +1,6 @@
 #include "terminal.h"
 
-extern const dbg_entry backlightEntry;
+extern const dbg_entry btResetEntry;
 extern const dbg_entry rebootEntry;
 extern const dbg_entry btSendEntry;
 extern const dbg_entry btCommandSendEntry;
@@ -10,7 +10,7 @@ extern const dbg_entry lightEntry;
 const dbg_entry* dbg_entries[] =
 {
 		&helpEntry,
-		&backlightEntry,
+		&btResetEntry,
 		&rebootEntry,
 		&btSendEntry,
 		&btCommandSendEntry,

@@ -19,7 +19,4 @@ public:
     static const uint16_t GOOD_CRC;
 };
 
-
-
-
 #endif //Include Guard
