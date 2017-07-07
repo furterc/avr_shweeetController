@@ -1,4 +1,4 @@
-#include "Bluetooth.h"
+#include <bluetooth.h>
 
 extern const bt_dbg_entry btTime;
 extern const bt_dbg_entry btAlarm;

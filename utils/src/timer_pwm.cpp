@@ -5,10 +5,9 @@
  *      Author: christo
  */
 
-#include "TimerPwm.h"
-
 #include <avr/io.h>
 #include <terminal.h>
+#include <timer_pwm.h>
 
 
 

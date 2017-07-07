@@ -1,9 +1,9 @@
 #ifndef LIGHTS_H_
 #define LIGHTS_H_
 
-#include "pwm.h"
+#include <timer_pwm.h>
+#include <pwm.h>
 #include "PwmRun.h"
-#include "TimerPwm.h"
 
 #define LEVEL_0_DUTY 0
 #define LEVEL_1_DUTY 0xA

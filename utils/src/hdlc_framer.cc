@@ -3,7 +3,7 @@
 #include <stdio.h>
 
 #include "hdlc_framer.h"
-#include "crc.h"
+#include <crc.h>
 
 const uint8_t escapedChars[] =
 {

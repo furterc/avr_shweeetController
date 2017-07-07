@@ -5,16 +5,15 @@
  *      Author: christo
  */
 
+#include <avr/delay.h>
+#include <bluetooth.h>
+#include <cMsg.h>
 #include <terminal.h>
+#include <RS485.h>
+
 #include "Time.h"
-#include "Bluetooth.h"
 #include "BT_Commands.h"
-
 #include "Lights.h"
-#include "cMsg.h"
-#include "RS485.h"
-#include "avr/delay.h"
-
 
 uint8_t getTime(uint8_t data0)
 {

@@ -1,6 +1,6 @@
 #include "Lights.h"
-#include "Bluetooth.h"
-#include "cMsg.h"
+#include <bluetooth.h>
+#include <cMsg.h>
 
 #include <terminal.h>
 

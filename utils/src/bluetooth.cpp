@@ -1,11 +1,9 @@
-#include "Bluetooth.h"
+#include <bluetooth.h>
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <terminal.h>
 #include <string.h>
-
-#include "BT_Commands.h"
 
 #define BAUD 115200
 #define MYUBBR ((F_CPU / (BAUD * 8UL))-1)

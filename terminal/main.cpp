@@ -15,7 +15,7 @@
 
 #include "timer_two.h"
 #include "cMsg.h"
-#include "Bluetooth.h"
+#include <bluetooth.h>
 
 #include "Lights.h"
 #include "Remote.h"
