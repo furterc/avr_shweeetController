@@ -12,8 +12,41 @@
 #include "BT_Commands.h"
 
 #include <cMsg.h>
+#include <RS485.h>
 
 cMsg kcmsg;
+void bedIO485(cMsg msg)
+{
+    if(msg.getType() == kcmsg.TYPE_GET)
+        return;
+
+    if(msg.getData0() == 0)
+    {
+        LedStrips.setKitchen(0);
+        LedStrips.setStudy(0);
+    }
+    else if(msg.getData0() == 1)
+    {
+        LedStrips.setKitchen(0);
+        LedStrips.setDutyDelayedSoft(&LedStrips.led_kitchen_bot, 0, 1, 20);
+        LedStrips.setStudy(0);
+    }
+    else if(msg.getData0() == 2)
+    {
+        LedStrips.setKitchen(1);
+        LedStrips.setStudy(1);
+    }
+
+    uint8_t data[4];
+
+
+    msg.toBytes(data);
+    msg.dbgPrint();
+//    Bluetooth.transmit_packet(data, 4);
+}
+extern const rs485_dbg_entry bedIOEntry =
+{ bedIO485, kcmsg.TAG_IO_BED };
+
 void kitchen(cMsg msg)
 {
     if (msg.getType() == msg.TYPE_GET)
