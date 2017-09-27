@@ -10,89 +10,94 @@
 
 cMsg::cMsg()
 {
-    mType = 0;
-    mTag = 0;
-    mData0 = 0;
-    mData1 = 0;
+    msg.type = 0;
+    msg.tag = 0;
+    msg.data0 = 0;
+    msg.data1 = 0;
+}
+
+cMsg::cMsg(cmsg_t data)
+{
+    msg = data;
 }
 
 cMsg::cMsg(uint8_t * data)
 {
-    mType = data[0];
-    mTag = data[1];
-    mData0 = data[2];
-    mData1 = data[3];
+    msg.type = data[0];
+    msg.tag = data[1];
+    msg.data0 = data[2];
+    msg.data1 = data[3];
 }
 
 cMsg::cMsg(uint8_t type, uint8_t tag, uint8_t data0, uint8_t data1)
 {
-    mType = type;
-    mTag = tag;
-    mData0 = data0;
-    mData1 = data1;
+    msg.type = type;
+    msg.tag = tag;
+    msg.data0 = data0;
+    msg.data1 = data1;
 }
 
 uint8_t cMsg::getType()
 {
-    return mType;
+    return msg.type;
 }
 
 uint8_t cMsg::getTag()
 {
-    return mTag;
+    return msg.tag;
 }
 
 uint8_t cMsg::getData0()
 {
-    return mData0;
+    return msg.data0;
 }
 uint8_t cMsg::getData1()
 {
-    return mData1;
+    return msg.data1;
 }
 
 void cMsg::setTag(Tag tag)
 {
-    mTag = tag;
+    msg.tag = tag;
 }
 
 void cMsg::setTag(uint8_t tag)
 {
-    mTag = tag;
+    msg.tag = tag;
 }
 
 void cMsg::setType(Type type)
 {
-    mType = type;
+    msg.type = type;
 }
 
 void cMsg::setType(uint8_t type)
 {
-    mType = type;
+    msg.type = type;
 }
 
 void cMsg::setData0(uint8_t data0)
 {
-    mData0 = data0;
+    msg.data0 = data0;
 }
 
 void cMsg::setData1(uint8_t data1)
 {
-    mData1 = data1;
+    msg.data1 = data1;
 }
 
 uint8_t cMsg::toBytes(uint8_t * bytes)
 {
-    bytes[0] = mType;
-    bytes[1] = mTag;
-    bytes[2] = mData0;
-    bytes[3] = mData1;
+    bytes[0] = msg.type;
+    bytes[1] = msg.tag;
+    bytes[2] = msg.data0;
+    bytes[3] = msg.data1;
     return 4;
 }
 
 void cMsg::dbgPrint()
 {
-    printp("cMsg\n type: %02X\n tag: %02X\n data0: %02X\n data1: %02X\n", mType, mTag, mData0, mData1);
+    printp("cMsg\n type: %02X\n tag: %02X\n data0: %02X\n data1: %02X\n", msg.type, msg.tag, msg.data0, msg.data1);
 }
 
 cMsg::~cMsg()

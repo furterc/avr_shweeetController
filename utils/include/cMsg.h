@@ -10,13 +10,18 @@
 
 #include "stdint.h"
 
+typedef struct
+{
+    uint8_t type;
+    uint8_t tag;
+    uint8_t data0;
+    uint8_t data1;
+
+}cmsg_t;
+
 class cMsg
 {
-    uint8_t mType;
-    uint8_t mTag;
-    uint8_t mData0;
-    uint8_t mData1;
-
+    cmsg_t msg;
 public:
     typedef enum
     {
@@ -33,6 +38,7 @@ public:
     } Tag;
 
     cMsg();
+    cMsg(cmsg_t data);
     cMsg(uint8_t * data);
     cMsg(uint8_t, uint8_t, uint8_t, uint8_t);
 
@@ -55,5 +61,6 @@ public:
 
     virtual ~cMsg();
 };
+
 
 #endif /* CMSG_H_ */

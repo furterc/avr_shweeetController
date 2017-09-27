@@ -1,8 +1,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdint-gcc.h>
 
-#include "hdlc_framer.h"
+#include <hdlc_framer.h>
 #include <crc.h>
 
 const uint8_t escapedChars[] =

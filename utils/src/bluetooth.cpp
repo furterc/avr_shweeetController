@@ -2,6 +2,7 @@
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
+#include <stdlib.h>
 #include <terminal.h>
 #include <string.h>
 
@@ -10,9 +11,6 @@
 
 cBluetooth::cBluetooth()
 {
-    mDataReady = false;
-    mCommandLen = 0;
-
     DDRE &= ~(1 << 1);  //input
     DDRE |= (1 << 0);   //output
 
@@ -28,6 +26,11 @@ cBluetooth::cBluetooth()
     UCSR0B = _BV(RXEN0) | _BV(TXEN0) | _BV(RXCIE1);
 
     printp("BT started\n");
+}
+
+cBluetooth::~cBluetooth()
+{
+
 }
 
 void cBluetooth::transmit_byte(uint8_t b)
@@ -77,22 +80,34 @@ void cBluetooth::transmit_command()
 
 void cBluetooth::run()
 {
-    if (mDataReady)
+    static cmsg_t *data = 0;
+
+    if(!data)
     {
-        mDataReady = false;
-        handleCommand();
+        data = (cmsg_t *)queue.getItem();
+
+        if(!data)
+        {
+            //queue empty
+            return;
+        }
     }
+
+
+    handleCommand(data);
+    free(data);
+
+    data = (cmsg_t *)queue.getItem();
+    //handle the message
+
+
 }
 
-void cBluetooth::handleCommand()
+void cBluetooth::handleCommand(cmsg_t *obj)
 {
-    mCommand[mCommandLen] = 0;
+    cmsg_t msgObj = *obj;
+    cMsg cmsgIn = cMsg(msgObj);
 
-    uint8_t data[mCommandLen];
-    memcpy(&data, mCommand, mCommandLen);
-    memset(mCommand, 0xFF, 64);
-
-    cMsg cmsgIn = cMsg(data);
     uint8_t idx = 0;
     const bt_dbg_entry *currBtEntry = bt_dbg_entries[idx++];
     while (currBtEntry)
@@ -111,15 +126,12 @@ void cBluetooth::handle(uint8_t ch)
     int rxLen = framer.pack(ch);
     if (rxLen)
     {
-        mCommandLen = rxLen;
-        memcpy(&mCommand, framer.buffer(), rxLen);
-        mDataReady = true;
+        cmsg_t *obj = (cmsg_t *)malloc(sizeof(cmsg_t));
+        memcpy(obj, framer.buffer(), rxLen);
+
+        if(!queue.putItem(obj))
+            free(obj);
     }
-}
-
-cBluetooth::~cBluetooth()
-{
-
 }
 
 ISR(USART0_RX_vect)

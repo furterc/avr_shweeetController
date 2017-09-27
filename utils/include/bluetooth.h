@@ -6,6 +6,7 @@
 //#include "Packet.h"
 #include "cMsg.h"
 #include "hdlc_framer.h"
+#include "cir_queue.h"
 typedef void (*bt_dbg_func)(cMsg packet);
 
 struct bt_dbg_entry
@@ -20,13 +21,11 @@ class cBluetooth
 {
     cHDLCframer framer = cHDLCframer(32);
 
-    bool mDataReady;
-    uint8_t mCommand[64];
-    uint8_t mCommandLen;
+    cCirQueue queue = cCirQueue();
 
-
-    void handleCommand();
+    void handleCommand(cmsg_t *obj);
     void transmit_byte(uint8_t b);
+
 public:
     void transmit_array(const char *str);
     void transmit_packet(uint8_t * buff, uint8_t len);
