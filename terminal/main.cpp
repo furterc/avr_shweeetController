@@ -17,15 +17,19 @@
 #include "cMsg.h"
 #include <bluetooth.h>
 
-#include "Lights.h"
+//#include "Lights.h"
 #include "Remote.h"
 #include "Time.h"
 #include "RS485.h"
-//
-//extern "C"
-//{
-//#include "iicDisplay/lcdpcf8574.h"
-//}
+#include "centurionRemote.h"
+#include "power_mon.h"
+#include "display.h"
+
+#include <analog.h>
+#include "led_strip.h"
+
+
+cDisplay Display = cDisplay();
 
 void watchdogReset()
 {
@@ -37,6 +41,39 @@ void printBedPWM(uint8_t i, uint8_t duty)
     printp("pwm%d\t: %d\n", i, duty)
 }
 
+void switchBedLigts(bool enabled)
+{
+    cMsg msg = cMsg(0,0,0,0);
+    msg.setType(msg.TYPE_SET);
+    msg.setTag(msg.TAG_LED_BED);
+
+    if(!enabled)
+        msg.setData1(0);
+    else
+        msg.setData1(255);
+
+    msg.setData0(0);
+    uint8_t data[4];
+    msg.toBytes(data);
+    RS485.transmit_packet(data,4);
+
+    _delay_ms(150);
+    msg.setData0(1);
+    msg.toBytes(data);
+    RS485.transmit_packet(data,4);
+
+    _delay_ms(150);
+    msg.setData0(2);
+    msg.toBytes(data);
+    RS485.transmit_packet(data,4);
+
+    _delay_ms(150);
+    msg.setData0(3);
+    msg.toBytes(data);
+    RS485.transmit_packet(data,4);
+}
+
+/* Pass messages between 485 and bluetooth*/
 cMsg tmsg = cMsg();
 void bed485(cMsg msg)
 {
@@ -82,46 +119,46 @@ void light(uint8_t argc, char **argv)
     if (argc == 1)
     {
         //display data
-        printp("Kitchen\n Top: %d\n Bot: %d\n",
-                mLights.getDuty(mLights.LIGHT_KITCHEN_TOP),
-                mLights.getDuty(mLights.LIGHT_KITCHEN_BOT));
-        printp("Study\n Top: %d\n Bot: %d\n",
-                mLights.getDuty(mLights.LIGHT_STUDY_TOP),
-                mLights.getDuty(mLights.LIGHT_STUDY_BOT));
+        printp("Kitchen\n   Top: %d\n   Bot: %d\n",
+                LedStrips.led_kitchen_top.pwm.getDutyC(),
+                LedStrips.led_kitchen_bot.pwm.getDutyC());
+        printp("Study\n   Top: %d\n   Bot: %d\n",
+                LedStrips.led_study_top.pwm.getDutyC(),
+                LedStrips.led_study_bot.pwm.getDutyC());
         return;
     }
 
     if (argc == 2)
     {
-        if (!strcmp(argv[1], "k"))
+        if(!strcmp(argv[1], "k"))
         {
-            if (mLights.getDuty(mLights.LIGHT_KITCHEN_TOP) != 0
-                    || mLights.getDuty(mLights.LIGHT_KITCHEN_BOT) != 0)
-            {
-                mLights.setSoft(mLights.LIGHT_KITCHEN_TOP, 0, 0);
-                mLights.setSoftDelayed(255, mLights.LIGHT_KITCHEN_BOT, 0, 0);
-            }
+            if(LedStrips.led_kitchen_top.pwm.getDutyC())
+                LedStrips.setKitchen(0);
             else
-            {
-                mLights.setSoftDelayed(150, mLights.LIGHT_KITCHEN_TOP, 4, 255);
-                mLights.setSoft(mLights.LIGHT_KITCHEN_BOT, 4, 255);
-            }
+                LedStrips.setKitchen(1);
+
         }
 
-        if (!strcmp(argv[1], "s"))
+        if(!strcmp(argv[1], "s"))
         {
-            if (mLights.getDuty(mLights.LIGHT_STUDY_TOP) != 0
-                    || mLights.getDuty(mLights.LIGHT_STUDY_BOT) != 0)
+            if(LedStrips.led_study_top.pwm.getDutyC())
+                LedStrips.setStudy(0);
+            else
+                LedStrips.setStudy(1);
+
+        }
+
+        if(!strcmp(argv[1], "b"))
+        {
+            static uint8_t tmp;
+            if(tmp++ == 0)
             {
-                mLights.setSoft(mLights.LIGHT_STUDY_TOP, 0, 0);
-                mLights.setSoftDelayed(255, mLights.LIGHT_STUDY_BOT, 0, 0);
-//                workspaceLED.reset();
+                switchBedLigts(1);
             }
             else
             {
-                mLights.setSoftDelayed(150, mLights.LIGHT_STUDY_TOP, 4, 255);
-                mLights.setSoft(mLights.LIGHT_STUDY_BOT, 4, 255);
-//                workspaceLED.set();
+                tmp = 0;
+                switchBedLigts(0);
             }
         }
     }
@@ -148,8 +185,69 @@ void time(uint8_t argc, char **argv)
 extern const dbg_entry timeEntry =
 { time, "t" };
 
+cAnalog battVoltage = cAnalog(4);
+cAnalog psuVoltage = cAnalog(5);
+cOutput powerRelay = cOutput(PORT_PF(3));
+cOutput chargerRelay = cOutput(PORT_PF(0));
+
+cPowerMon powerMon = cPowerMon(&powerRelay, &chargerRelay, &battVoltage, &psuVoltage);
+void power(uint8_t argc, char **argv)
+{
+    if (argc == 3)
+    {
+        if(!strcmp(argv[1], "c"))
+        {
+            uint8_t state = atoi(argv[2]);
+
+            if (!powerMon.enableCharger(state))
+            {
+                printp("bat in use\n");
+                return;
+            }
+            else
+            {
+                printp("charger enabled\n");
+            }
+        }
+    }
+    else if (argc == 2)
+    {
+        uint8_t state = atoi(argv[1]);
+        if (state == 1)
+        {
+            powerMon.setState(powerMon.POWER_SRC_PSU);
+            printf("psu ");
+        }
+        else
+        {
+            powerMon.setState(powerMon.POWER_SRC_BATTERY);
+            printf("bat ");
+        }
+        printf("selected\n");
+    }
+    else
+    {
+        printp("pwr: ");
+        if (powerRelay.get())
+        {
+            printp("psu\n");
+            return;
+        }
+
+        printp("bat\n");
+    }
+
+}
+extern const dbg_entry powerEntry =
+{ power, "p" };
+
 void btSend(uint8_t argc, char **argv)
 {
+    uint16_t bVoltage = (uint16_t)(15000.0 * (battVoltage.lastSample() / 1024.0));
+    printf("batV: %d mV\n", bVoltage);
+
+    uint16_t pVoltage = (uint16_t)(15000.0 * (psuVoltage.lastSample() / 1024.0));
+    printf("psuV: %d mV\n", pVoltage);
 
 }
 extern const dbg_entry btSendEntry =
@@ -183,19 +281,43 @@ void remoteCB(uint8_t button, bool state)
     switch (button)
     {
     case 0:
-        mLights.incLevel(mLights.LIGHT_KITCHEN_TOP);
+//        mLights.incLevel(mLights.LIGHT_KITCHEN_TOP);
         break;
     case 1:
-        mLights.incLevel(mLights.LIGHT_KITCHEN_BOT);
+//        mLights.incLevel(mLights.LIGHT_KITCHEN_BOT);
         break;
     case 2:
-        mLights.incLevel(mLights.LIGHT_STUDY_BOT);
+//        mLights.incLevel(mLights.LIGHT_STUDY_BOT);
         break;
     case 3:
-        mLights.incLevel(mLights.LIGHT_STUDY_TOP);
+//        mLights.incLevel(mLights.LIGHT_STUDY_TOP);
         break;
     default:
         break;
+    }
+}
+
+void btn4CB(bool state)
+{
+    static bool setted;
+    //only interrupt upon click
+    if (state)
+    {
+        if(!setted)
+        {
+            printp("kitchen on\n");
+
+            LedStrips.setDutySoft(&LedStrips.led_kitchen_top, 1, 255);
+            LedStrips.setDutySoft(&LedStrips.led_kitchen_bot, 1, 255);
+            setted = true;
+        }
+        else
+        {
+            printp("kitchen off\n");
+            LedStrips.setDutySoft(&LedStrips.led_kitchen_top, 1, 0);
+            LedStrips.setDutySoft(&LedStrips.led_kitchen_bot, 1, 0);
+            setted = false;
+        }
     }
 }
 
@@ -207,16 +329,18 @@ void btn5CB(bool state)
     {
         if(!setted)
         {
-            printp("setting\n");
-            mLights.setLevel(mLights.LIGHT_STUDY_TOP, 5);
-            mLights.setLevel(mLights.LIGHT_STUDY_BOT, 5);
+            printp("study on\n");
+            LedStrips.setDutySoft(&LedStrips.led_study_top, 1, 255);
+            LedStrips.setDutySoft(&LedStrips.led_study_bot, 1, 255);
+
+
             setted = true;
         }
         else
         {
-            printp("unsetting\n");
-            mLights.setLevel(mLights.LIGHT_STUDY_TOP, 0);
-            mLights.setLevel(mLights.LIGHT_STUDY_BOT, 0);
+            printp("study off\n");
+            LedStrips.setDutySoft(&LedStrips.led_study_top, 1, 0);
+            LedStrips.setDutySoft(&LedStrips.led_study_bot, 1, 0);
             setted = false;
         }
     }
@@ -228,87 +352,38 @@ void timerTwoCB(void)
 }
 
 
-static uint16_t cnt = 0;
-void hekRemoteCB(bool state)
-{
 
-    //only interrupt upon click
+
+void hekRemoteCB(bool state, uint8_t pulseLen)
+{
+    bool ligtsOn = false;
+
+    if(LedStrips.led_kitchen_top.pwm.getDutyC() == 255)
+        ligtsOn = true;
+
     if (state)
     {
-        cnt++;
+        //interrupt op hoog
+        if((pulseLen > 10) && (!ligtsOn))
+        {
+            switchBedLigts(1);
+            LedStrips.setStudy(1);
+        }
         return;
     }
 
-
-    printp("hek4: %d\n", cnt);
-    cnt = 0;
-
-    if (mLights.getDuty(mLights.LIGHT_KITCHEN_TOP) != 0
-            || mLights.getDuty(mLights.LIGHT_KITCHEN_BOT) != 0)
+    if(ligtsOn)
     {
-        mLights.setSoft(mLights.LIGHT_KITCHEN_TOP, 0, 0);
-        mLights.setSoftDelayed(255, mLights.LIGHT_KITCHEN_BOT, 0, 0);
+        LedStrips.setKitchen(0);
+        LedStrips.setStudy(0);
 
-        cMsg msg = cMsg(0,0,0,0);
-        msg.setType(msg.TYPE_SET);
-        msg.setTag(msg.TAG_LED_BED);
-        msg.setData1(0);
-        msg.setData0(0);
-        uint8_t data[4];
-        msg.toBytes(data);
-        RS485.transmit_packet(data,4);
-
-        _delay_ms(150);
-        msg.setData0(1);
-        msg.toBytes(data);
-        RS485.transmit_packet(data,4);
-
-        _delay_ms(150);
-        msg.setData0(2);
-        msg.toBytes(data);
-        RS485.transmit_packet(data,4);
-
-        _delay_ms(150);
-        msg.setData0(3);
-        msg.toBytes(data);
-        RS485.transmit_packet(data,4);
+        switchBedLigts(0);
     }
     else
     {
-        mLights.setSoftDelayed(50, mLights.LIGHT_KITCHEN_TOP, 2, 255);
-        mLights.setSoft(mLights.LIGHT_KITCHEN_BOT, 1, 255);
-
-        cMsg msg = cMsg(0,0,0,0);
-        msg.setType(msg.TYPE_SET);
-        msg.setTag(msg.TAG_LED_BED);
-        msg.setData1(255);
-        msg.setData0(0);
-        uint8_t data[4];
-        msg.toBytes(data);
-        RS485.transmit_packet(data,4);
-
-        _delay_ms(150);
-        msg.setData0(1);
-        msg.toBytes(data);
-        RS485.transmit_packet(data,4);
-
-        _delay_ms(150);
-        msg.setData0(2);
-        msg.toBytes(data);
-        RS485.transmit_packet(data,4);
-
-        _delay_ms(150);
-        msg.setData0(3);
-        msg.toBytes(data);
-        RS485.transmit_packet(data,4);
-
+        //kitchen on
+        LedStrips.setKitchen(1);
     }
-}
-
-void pirCB(bool state)
-{
-    if (state)
-        printp("pir: %d:%d\n", myTime.getHours(), myTime.getMinutes());
 }
 
 /* main program starts here */
@@ -316,8 +391,6 @@ int main(void)
 {
     WDTCSR = _BV(WDCE) | _BV(WDE);
     WDTCSR = (_BV(WDP2) | _BV(WDP1) | _BV(WDP0) | _BV(WDE));
-
-
 
     sei();
 
@@ -346,14 +419,17 @@ int main(void)
     timerTwo_init();
     timerTwo_setCB(timerTwoCB);
 
-    cInputCB hekRemote = cInputCB(PORT_PH(2));
+    cCenturionRemote hekRemote = cCenturionRemote(PORT_PH(2));
     hekRemote.setCB(hekRemoteCB);
+
+    cInputCB button4 = cInputCB(PORT_PJ(5));
+    button4.setCB(btn4CB);
 
     cInputCB button5 = cInputCB(PORT_PJ(6));
     button5.setCB(btn5CB);
 
-    cInputCB pir = cInputCB(PORT_PL(0));
-    pir.setCB(pirCB);
+//    cInputCB pir = cInputCB(PORT_PL(0));
+//    pir.setCB(pirCB);
 
     cRemote remote = cRemote(PORT_PL(2), PORT_PL(1), PORT_PL(6), PORT_PL(7));
     remote.setCB(remoteCB);
@@ -361,29 +437,40 @@ int main(void)
     cOutput bt_reset = cOutput(PORT_PG(5));
     bt_reset.set();
 
-//    lcd_init(LCD_DISP_ON);
-//    lcd_led(0);
-//    lcd_gotoxy(4, 0);
-//    lcd_puts("SHWEEET!");
+
 
     uint8_t delayDivider = 0;
+    uint8_t ledState = 0;
     while (1)
     {
-        mLights.runDelay();
+        ledState = LedStrips.run();
         _delay_ms(10);
 
         if (++delayDivider > 10)
         {
+            delayDivider = 0;
             watchdogReset();
+
             Bluetooth.run();
             RS485.run();
-            delayDivider = 0;
             Terminal.run();
             heartbeat.run();
-            hekRemote.run();
+            hekRemote.runC();
             remote.run();
-            pir.run();
+            button4.run();
             button5.run();
+            //run only if leds not busy
+            if (!ledState)
+            {
+                powerMon.run();
+                Display.updateTime();
+
+                uint16_t vBat = 0;
+                uint16_t vPSU = 0;
+                powerMon.getVoltage(&vBat, &vPSU);
+                Display.updateVoltage(vBat, vPSU);
+            }
+
         }
     }
     return 0;

@@ -13,7 +13,7 @@
 
 #include "Time.h"
 #include "BT_Commands.h"
-#include "Lights.h"
+#include "led_strip.h"
 
 uint8_t getTime(uint8_t data0)
 {
@@ -98,8 +98,8 @@ void cTime::checkAlarms()
 
     if (mAlarmHour == mHours && mAlarmMinute == mMinutes)
     {
-        mLights.setSoft(mLights.LIGHT_KITCHEN_TOP, 255, 255);
-        mLights.setSoft(mLights.LIGHT_KITCHEN_BOT, 255, 255);
+        LedStrips.setDutyDelayedSoft(&LedStrips.led_kitchen_top, 100, 10, 255);
+        LedStrips.setDutyDelayedSoft(&LedStrips.led_kitchen_bot, 100, 10, 255);
 
         printp("alarm!!!\n");
 
@@ -182,6 +182,13 @@ void cTime::incTime()
         }
         checkAlarms();
     }
+}
+
+void cTime::getTime(uint8_t *hours, uint8_t *minutes, uint8_t *seconds)
+{
+    *hours = mHours;
+    *minutes = mMinutes;
+    *seconds = mSeconds;
 }
 
 void cTime::setHours(uint8_t hours)

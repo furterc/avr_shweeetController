@@ -23,6 +23,7 @@ public:
     uint8_t getAlarmMinute();
 
     void incTime();
+    void getTime(uint8_t *hours, uint8_t *minutes, uint8_t *seconds);
     void setHours(uint8_t);
     uint8_t getHours();
     void setMinutes(uint8_t);

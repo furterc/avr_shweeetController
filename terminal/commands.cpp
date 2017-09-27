@@ -6,6 +6,7 @@ extern const dbg_entry btSendEntry;
 extern const dbg_entry btCommandSendEntry;
 extern const dbg_entry timeEntry;
 extern const dbg_entry lightEntry;
+extern const dbg_entry powerEntry;
 
 const dbg_entry* dbg_entries[] =
 {
@@ -16,5 +17,6 @@ const dbg_entry* dbg_entries[] =
 		&btCommandSendEntry,
 		&timeEntry,
 		&lightEntry,
+		&powerEntry,
 		0
 };

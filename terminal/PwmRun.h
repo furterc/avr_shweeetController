@@ -20,10 +20,12 @@ class cPwmRun {
 	bool mEnabled = false;
 
 public:
+	cPwmRun();
 	cPwmRun(cPWM *);
-	void setDuty(uint8_t,uint8_t);
+	void setPWM(cPWM *);
+	void setDuty(uint8_t delay, uint8_t newDuty);
 	void setDelayedDuty(uint8_t dutyDelay, uint8_t delay, uint8_t newDuty);
-	void run();
+	int8_t run();
 
 	virtual ~cPwmRun();
 };
