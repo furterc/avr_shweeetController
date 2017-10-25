@@ -27,7 +27,7 @@
 
 #include <analog.h>
 #include "led_strip.h"
-
+#include "node.h"
 
 cDisplay Display = cDisplay();
 
@@ -241,13 +241,25 @@ void power(uint8_t argc, char **argv)
 extern const dbg_entry powerEntry =
 { power, "p" };
 
+
+cNode node = cNode(0);
+
 void btSend(uint8_t argc, char **argv)
 {
-    uint16_t bVoltage = (uint16_t)(15000.0 * (battVoltage.lastSample() / 1024.0));
-    printf("batV: %d mV\n", bVoltage);
-
-    uint16_t pVoltage = (uint16_t)(15000.0 * (psuVoltage.lastSample() / 1024.0));
-    printf("psuV: %d mV\n", pVoltage);
+    if(argc == 1)
+        node.ping();
+    else if (argc == 3)
+    {
+        node.setPwm(atoi(argv[1]), atoi(argv[2]));
+        printf("set pwd %d to %d\n",atoi(argv[1]),atoi(argv[2]));
+    }
+//    uint8_t send[4] = {0x01,0x05,0x01,0x00};
+//    RS485.transmit_packet(send, 4);
+//    uint16_t bVoltage = (uint16_t)(15000.0 * (battVoltage.lastSample() / 1024.0));
+//    printf("batV: %d mV\n", bVoltage);
+//
+//    uint16_t pVoltage = (uint16_t)(15000.0 * (psuVoltage.lastSample() / 1024.0));
+//    printf("psuV: %d mV\n", pVoltage);
 
 }
 extern const dbg_entry btSendEntry =

@@ -63,7 +63,7 @@ void cBluetooth::transmit_packet(uint8_t * buff, uint8_t len)
 {
     uint8_t frame_ptr[64];
     uint32_t frame_length = 64;
-    cHDLCframer::frame(buff, 4, frame_ptr, &frame_length);
+    framer.frame(buff, 4, frame_ptr, &frame_length);
 
     for (uint8_t i = 0; i < frame_length; i++)
         transmit_byte(frame_ptr[i]);

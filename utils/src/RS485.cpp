@@ -58,7 +58,7 @@ void cRS485::transmit_packet(uint8_t * buff, uint8_t len)
 {
     uint8_t frame_ptr[64];
     uint32_t frame_length = 64;
-    cHDLCframer::frame(buff, 4, frame_ptr, &frame_length);
+    framer.frame(buff, len, frame_ptr, &frame_length);
 
     for (uint8_t i = 0; i < frame_length; i++)
     {
@@ -70,42 +70,50 @@ void cRS485::handleCommand()
 {
     mCommand[mCommandLen] = 0;
 
-        uint8_t data[mCommandLen];
-        memcpy(&data, mCommand, mCommandLen);
-        memset(mCommand, 0xFF, 64);
+    uint8_t data[mCommandLen];
+    memcpy(&data, mCommand, mCommandLen);
+    memset(mCommand, 0xFF, 64);
 
-        cMsg cmsgIn = cMsg(data);
-        uint8_t idx = 0;
-        const rs485_dbg_entry *curr485Entry = rs485_dbg_entries[idx++];
-        while (curr485Entry)
+//    printf("485data: ");
+//
+//    for (uint8_t idx = 0; idx < mCommandLen; idx++)
+//        printf("%02X ", data[idx]);
+//
+//    printf("\n");
+
+    cMsg cmsgIn = cMsg(data);
+    uint8_t idx = 0;
+    const rs485_dbg_entry *curr485Entry = rs485_dbg_entries[idx++];
+    while (curr485Entry)
+    {
+        if ((curr485Entry->tag == cmsgIn.getTag()))
         {
-            if ((curr485Entry->tag == cmsgIn.getTag()))
-            {
-                curr485Entry->func(cmsgIn);
-                return;
-            }
-            curr485Entry = rs485_dbg_entries[idx++];
+            curr485Entry->func(cmsgIn);
+            return;
         }
+        curr485Entry = rs485_dbg_entries[idx++];
+    }
 }
 
 void cRS485::run()
 {
     if (mDataReady)
-        {
-            mDataReady = false;
-            handleCommand();
-        }
+    {
+        mDataReady = false;
+        handleCommand();
+    }
 }
 
 void cRS485::handle(uint8_t ch)
 {
+    printf("  %02X", ch);
     int rxLen = framer.pack(ch);
-        if (rxLen)
-        {
-            mCommandLen = rxLen;
-            memcpy(&mCommand, framer.buffer(), rxLen);
-            mDataReady = true;
-        }
+    if (rxLen)
+    {
+        mCommandLen = rxLen;
+        memcpy(&mCommand, framer.buffer(), rxLen);
+        mDataReady = true;
+    }
 }
 
 ISR(USART2_RX_vect)

@@ -10,6 +10,7 @@
 
 class cHDLCframer
 {
+    uint8_t mCrcBytes;
 	uint8_t *mBuffer;
 	uint32_t mLength;
 	uint32_t mFrameIdx;
@@ -26,7 +27,7 @@ public:
 	// Use pack() to start packing bytes of an HDLC frame into buff_ptr
 	//
 	// When pack returns a value, a valid frame has been received
-	cHDLCframer(uint32_t buff_len);
+	cHDLCframer(uint32_t buff_len, uint8_t crc_bytes);
 	virtual ~cHDLCframer();
 
 	// --------------------------------------------------
@@ -46,7 +47,7 @@ public:
 	// --------------------------------------------------
 	// frame_length returns the number of bytes within the frame
 	// --------------------------------------------------
-    static void frame(uint8_t * payload_ptr,
+    void frame(uint8_t * payload_ptr,
     						uint32_t payload_length,
 							uint8_t * frame_ptr,
 							uint32_t * frame_length);

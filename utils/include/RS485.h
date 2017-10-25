@@ -22,7 +22,7 @@ struct rs485_dbg_entry
 
 class cRS485
 {
-    cHDLCframer framer = cHDLCframer(32);
+    cHDLCframer framer = cHDLCframer(32, 1);
 
     bool mDataReady;
     char mCommand[64];

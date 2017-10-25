@@ -5,7 +5,7 @@
  *      Author: christo
  */
 
-#include <avr/delay.h>
+#include <util/delay.h>
 #include <bluetooth.h>
 #include <cMsg.h>
 #include <terminal.h>

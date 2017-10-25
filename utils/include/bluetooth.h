@@ -19,7 +19,7 @@ void help();
 
 class cBluetooth
 {
-    cHDLCframer framer = cHDLCframer(32);
+    cHDLCframer framer = cHDLCframer(32, 2);
 
     cCirQueue queue = cCirQueue();
 

@@ -34,7 +34,8 @@ public:
         TAG_ALARM,      //1
         TAG_LED_KITCHEN,//2
         TAG_LED_STUDY,  //3
-        TAG_LED_BED    //4
+        TAG_LED_BED,    //4
+        TAG_IO_BED      //5
     } Tag;
 
     cMsg();
